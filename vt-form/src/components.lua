@@ -444,8 +444,6 @@ compPropGrid.OnModified=function(Sender)
 		propValue= propValue -- tostring(propValue)
 	end
 	
-	print(propName, propPath, ppName, propValue, Sender.TIObject[ppName])
-	
 	if ppName and type(Sender.TIObject[ppName]) ~= "table" then
 		propValue = Sender.TIObject[ppName]
 		elem.props[ppName] = propValue
