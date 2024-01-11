@@ -28,17 +28,19 @@ function json2lua(fileName)
 			table.insert(lua_out,(string.format("%s%s = '%s',",string.rep("\t",n),key,value)))
 		end
 	end
+	table.insert(lua_out,"local frm={}\n")
 	for n,c in pairs(frm) do
 		if VCL[c.class]~=nil then
-			table.insert(lua_out,(string.format("local %s = VCL.%s( %s, '%s', { ", c.name, c.class, tostring(c.parent), c.name)))
+			table.insert(lua_out,(string.format("frm.%s = VCL.%s( %s, '%s', { ", c.name, c.class, tostring(c.parent), c.name)))
 			for k,v in pairs(c.props) do
 				if string.lower(k)~="name" then
 					print_prop(k,v)
 				end
 			end
-			table.insert(lua_out,("})"))
+			table.insert(lua_out,"})")
 		end
 	end
+	table.insert(lua_out,"\nreturn frm")
 	return lua_out
 end
 
