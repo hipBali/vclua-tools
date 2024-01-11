@@ -7,8 +7,8 @@ This small application allows you to create and design vclua forms easily.
 
 _Requirements:_
  - vclua (v.0.9.2 or higher)
- - lua json library
- - lua log library
+ - [lua json library](https://github.com/rxi/json.lua)
+ - [lua log library](https://github.com/rxi/log.lua)
 
 _Features:_
  - Drag and drop component  in to the forms component tree
