@@ -6,7 +6,7 @@ This small application allows you to create and design vclua forms easily.
 <img src="screenshots/vtform_1.jpg" alt="vt-form" width="50%" height="50%">
 
 _Requirements:_
- - vclua (v.0.9.2 or higher)
+ - [vclua](https://github.com/hipbali/vclua) (v.0.9.2 or higher)
  - [lua json library](https://github.com/rxi/json.lua)
  - [lua log library](https://github.com/rxi/log.lua)
 
