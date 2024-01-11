@@ -46,6 +46,7 @@ _Features:_
 ### convert json form to lua script
 Converts vt-form tool's output to lua script.
 [json2lua.lua](utils/json2lua.lua)
+
 Usage:
 ```
  lua json2lua.lua json_filename > lua_scriptname
