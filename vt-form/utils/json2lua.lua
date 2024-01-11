@@ -1,11 +1,11 @@
 -- ***************************************
--- Json form loader example
+-- Json form to lua script converter
 -- Copyright (C) 2013-2024 Hi-Project Ltd.
 -- ***************************************
 local VCL = require "vcl.core"
 local json = require "json"
 
-function jsonFormLoad(fileName) 
+function json2lua(fileName) 
     assert(fileName,"missing filename parameter!")
 	local file, errorString = io.open( fileName, mode or "r"  )
 	assert(file,string.format("%s not found!", tostring(fileName)))
@@ -42,5 +42,5 @@ function jsonFormLoad(fileName)
 	return lua_out
 end
 
-local j2lua = jsonFormLoad(arg[1])
+local j2lua = json2lua(arg[1])
 print(table.concat(j2lua,"\n"))
