@@ -17,6 +17,12 @@ _Features:_
  - Component position fine tuning on the preview form
  - Saving and loading forms in JSON format
 
+_Source code:_
+ - [src](src/)
+
+_Luajit distro:_
+ - [luajit with lar distro](dist/)
+   
 #### loading form from json file    
 ```lua
     local VCL = require "vcl.core"
