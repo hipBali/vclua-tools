@@ -3,7 +3,7 @@
 ## vt-forms
 This small application allows you to create and design vclua forms easily.
 
-![](screenshots/vtform_1.jpg) {:height="600px" width="400px"}.
+![](screenshots/vtform_1.jpg =300x200).
 
 _Requirements:_
  - vclua (v.0.9.2 or higher)
