@@ -60,7 +60,7 @@ local function setupImages()
 	local add = function(t,b)
 		-- skip first 8 bytes
 		local memStr,size = str.LoadFromHex(b:sub(9))
-		img.picture.bitmap:LoadFromStream(memStr,size) 	
+		img.picture:LoadFromStream(memStr) 	
 		memStr:Free()
 		return t:Add(img.picture.bitmap,nil)
 	end
