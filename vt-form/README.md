@@ -22,6 +22,9 @@ _Source code:_
 
 _Luajit distro:_
  - [luajit with lar distro](dist/)
+
+_Lua5.4 distro:_
+ - [lua5.4 with lar distro](dist54/)
    
 #### loading form from json file    
 ```lua
