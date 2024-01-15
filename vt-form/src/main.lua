@@ -28,7 +28,7 @@ VCL.Application():Initialize()
 function VCL.loadAction(self, t)
 	local list = self
 	for n,prop in pairs(t) do
-		local a = vcl.Action()
+		local a = VCL.Action()
 		a._= prop
 		list[prop.name] = a
 	end
@@ -44,9 +44,9 @@ function VCL.loadMenu(self,t,mId)
 			end
 		end
 		if mId then
-			self.Items:Find(mId):Add(vcl.MenuItem(self,props))
+			self.Items:Find(mId):Add(VCL.MenuItem(self,props))
 		else
-			self.Items:Add(vcl.MenuItem(self,props))
+			self.Items:Add(VCL.MenuItem(self,props))
 		end
 		if mt.submenu then
 			VCL.loadMenu(self,mt.submenu,props.caption)
@@ -55,8 +55,8 @@ function VCL.loadMenu(self,t,mId)
 end
 
 local function setupImages()
-	local img = vcl.Image()	
-	local str = vcl.Stream()
+	local img = VCL.Image()	
+	local str = VCL.Stream()
 	local add = function(t,b)
 		-- skip first 8 bytes
 		local memStr,size = str.LoadFromHex(b:sub(9))
