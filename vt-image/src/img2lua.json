@@ -1,0 +1,184 @@
+[
+  {
+    "props": {
+      "Caption": "Image to Lua converter",
+      "AllowDropFiles": true,
+      "Width": 360,
+      "BorderIcons": "biSystemMenu",
+      "AlphaBlendValue": 255,
+      "Name": "img2lua_form",
+      "Position": "poScreenCenter",
+      "Height": 180
+    },
+    "class": "Form",
+    "name": "img2lua_form"
+  },
+  {
+    "props": {
+      "Align": "alBottom",
+      "Caption": "",
+      "BevelInner": "bvLowered",
+      "BevelOuter": "bvRaised",
+      "Height": 36
+    },
+    "class": "Panel",
+    "parent": "img2lua_form",
+    "name": "Panel1"
+  },
+  {
+    "props": {
+      "Top": 6,
+      "Name": "btAdd",
+      "Caption": "Add file",
+      "Flat": true,
+      "Width": 80,
+      "Left": 10
+    },
+    "class": "SpeedButton",
+    "parent": "Panel1",
+    "name": "btAdd"
+  },
+  {
+    "props": {
+      "Top": 6,
+      "Name": "btClear",
+      "Caption": "Clear list",
+      "Flat": true,
+      "Width": 80,
+      "Left": 100
+    },
+    "class": "SpeedButton",
+    "parent": "Panel1",
+    "name": "btClear"
+  },
+  {
+    "props": {
+      "Align": "alRight",
+      "BevelOuter": "bvNone",
+      "Caption": "",
+      "Width": 100
+    },
+    "class": "Panel",
+    "parent": "Panel1",
+    "name": "Panel2"
+  },
+  {
+    "props": {
+      "Top": 5,
+      "Name": "btConvert",
+      "Caption": "Convert",
+      "Flat": true,
+      "Width": 80,
+      "Anchors": "[akTop,akLeft]",
+      "Left": 9
+    },
+    "class": "SpeedButton",
+    "parent": "Panel2",
+    "name": "btConvert"
+  },
+  {
+    "props": {
+      "Align": "alRight",
+      "Caption": "",
+      "BevelInner": "bvLowered"
+    },
+    "class": "Panel",
+    "parent": "img2lua_form",
+    "name": "Panel3"
+  },
+  {
+    "props": {
+      "Top": 2,
+      "Anchors": "[akLeft,akRight]",
+      "Center": true,
+      "Align": "alTop",
+      "Name": "imgView",
+	  "Proportional": true,
+	  "Stretch": true
+    },
+    "class": "Image",
+    "parent": "Panel3",
+    "name": "imgView"
+  },
+  {
+    "props": {
+      "Align": "alTop",
+      "Caption": "",
+      "BevelOuter": "bvNone",
+      "Height": 24
+    },
+    "class": "Panel",
+    "parent": "Panel3",
+    "name": "Panel4"
+  },
+  {
+    "props": {
+      "Name": "lbInfo",
+      "Width": 170,
+      "Alignment": "taCenter",
+      "Layout": "tlCenter",
+      "Left": 1,
+      "Top": 2,
+      "Color": -2147483645,
+      "Caption": "Width: 0   Height: 0",
+	  "Autosize": false
+    },
+    "class": "Label",
+    "parent": "Panel4",
+    "name": "lbInfo"
+  },
+  {
+    "props": {
+      "Align": "alClient",
+      "Caption": "",
+      "BevelInner": "bvLowered",
+      "BevelOuter": "bvRaised",
+      "Height": 26
+    },
+    "class": "Panel",
+    "parent": "img2lua_form",
+    "name": "Panel5"
+  },
+  {
+    "props": {
+      "Top": 3,
+      "Width": 16,
+      "Left": 2,
+      "Height": 16,
+      "Shape": "stTriangleDown",
+	  "Brush": { 
+		"Color": -2147483645
+	  }
+    },
+    "class": "Shape",
+    "parent": "Panel5",
+    "name": "Shape1"
+  },
+  {
+    "props": {
+      "Top": 2,
+      "Layout": "tlCenter",
+      "Caption": "Add or drop file(s) here",
+      "Left": 20
+    },
+    "class": "Label",
+    "parent": "Panel5",
+    "name": "Label2"
+  },
+  {
+    "props": {
+      "Name": "clFiles",
+      "Width": 164,
+      "Top": 24,
+      "Anchors": "[akTop,akLeft,akRight,akBottom]",
+      "BorderStyle": "bsSingle",
+      "ItemHeight": 17,
+      "Align": "alNone",
+      "MultiSelect": true,
+      "Height": 120
+    },
+    "class": "CheckListBox",
+    "parent": "Panel5",
+    "name": "clFiles"
+  }
+]
