@@ -426,35 +426,27 @@ tvForm.OnDragDrop=function(Sender,Source,X,Y)
 		end
 	end
 end
+
 compPropGrid.OnModified=function(Sender) 
 -- Property Grid events
-	local propName, propPath = Sender:GetActiveProperty()	
-	local ppName = Sender:GetActivePropertyParent()
-	if ppName then
-		propPath = propPath .. "." .. ppName
-	end
-	local propValue, rootObject = getProperty(Sender.TIObject,propPath.."."..propName)	
 	local elem=getCurElem()
-	if (propName=="Name") then
-		elem.obj.Text = propValue
-	end		
-	if type(propValue)=="table" and propValue and propValue.name then
-		propValue=propValue.name
-	else
-		propValue= propValue -- tostring(propValue)
+	local path = Sender:PropertyPath(Sender:GetActiveRow())
+	local pp = path:split()
+	local propName = pp[#pp]
+	local propValue = getProperty(Sender.TIObject,table.concat(pp,"."))
+	local prop = elem.props
+	-- filter out sets
+	if type(propValue)=="string" and propValue:find("%b[]") and propValue:find(propName) then
+		table.remove(pp,#pp)
+		propName = pp[#pp]
 	end
-	
-	if ppName and type(Sender.TIObject[ppName]) ~= "table" then
-		propValue = Sender.TIObject[ppName]
-		elem.props[ppName] = propValue
-	elseif ppName then
-		elem.props[ppName] = elem.props[ppName] or {}
-		elem.props[ppName][propName] = propValue
-	else
-		propPath = propPath.."."..propName
-		propPath = propPath:sub(rootObject:len()+1):gsub("^%.*", "")
-		elem.props[propPath] = propValue
+	for i,p in pairs(pp) do
+		if i<#pp then
+			prop[p] = prop[p] or {}
+			prop = prop[p]
+		end
 	end
+	prop[propName] = propValue
 end
 -- Tree events
 tvForm.OnClick=function(Sender)

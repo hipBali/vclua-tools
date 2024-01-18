@@ -1,9 +1,17 @@
 -- ***************************************
 -- VCLua Form tool
--- Copyright (C) 2013-2023 Hi-Project Ltd.
+-- Copyright (C) 2013-2024 Hi-Project Ltd.
 --
 -- common funcs
 -- ***************************************
+
+
+function string:split(sep)
+   local sep, fields = sep or ".", {}
+   local pattern = string.format("([^%s]+)", sep)
+   self:gsub(pattern, function(c) fields[#fields+1] = c end)
+   return fields
+end
 
 function pairsByKeys (t, f)
       local a = {}
