@@ -315,7 +315,6 @@ local function pasteComponentTree(p,t)
 		ne.events= table.copy(t.events)
 		ne.props = table.copy(t.props)
 		ne.props["Name"] = ne.name		
-		ne = ne or t
 		for propPath,_ in pairs(ne.props) do
 			if (propPath ~= "Name") then
 				setProperty(ne.vclObj, propPath, t.vclObj[propPath])
@@ -326,7 +325,7 @@ local function pasteComponentTree(p,t)
 			pasteComponentTree(ne,v)
 		end
 	else
-		t.vclObj.parent = p.vclObj
+		t.vclObj.Parent = p.vclObj
 		p.items[n] = t
 	end	
 	prjRefresh()
@@ -383,7 +382,7 @@ function fromJson(frm)
 				t.vclObj[propPath]=propValue					
 			else					
 				t.props[propPath]=propValue
-			end						
+			end
 			if t.vclObj and propPath and propValue ~= nil then					
 				setProperty(t.vclObj, propPath, propValue)
 			end	
@@ -408,7 +407,7 @@ tvForm.OnDragOver=function(Sender,Source, X, Y, State)
 end 
 tvForm.OnDragDrop=function(Sender,Source,X,Y)
 	local parent = tvForm:GetNodeAt(X,Y)
-	if parent and Source.Selected then 
+	if parent and Source.Selected then
 		if Source.Handle==compListTree.Handle then
 			local compName = Source.Selected.Text
 			if addComponent(parent, compName) then

@@ -13,7 +13,7 @@ function MoveComponent(cmp, callBack)
 		origObject.visible = true
 	end
 	origObject = cmp
-	mvObject = VCL.Shape(cmp.parent,"move_"..cmp.name, {
+	mvObject = VCL.Shape(cmp.Parent,"move_"..cmp.name, {
 		brush = {
 			style = 'bsClear'
 		},
@@ -25,13 +25,13 @@ function MoveComponent(cmp, callBack)
 		top = origObject.top,
 		width = origObject.width,
 		height = origObject.height,
-		onMouseDown = function(mvComp,Button,Shift,X,Y)
+		OnMouseDown = function(mvComp,Button,Shift,X,Y)
 			if Button ~= 'mbLeft' then return end
 			isMoving = true
 			orgX = X
 			orgY = Y
 		end,
-		onMouseUp = function (mvComp,Button,Shift,X,Y)
+		OnMouseUp = function (mvComp,Button,Shift,X,Y)
 		  isMoving = false
 		  origObject.Left = mvObject.Left + X - orgX
 		  origObject.Top  = mvObject.Top  + Y - orgY
@@ -42,7 +42,7 @@ function MoveComponent(cmp, callBack)
 			callBack()
 		  end
 		end,
-		onMouseMove = function (mvComp,Shift,X,Y)
+		OnMouseMove = function (mvComp,Shift,X,Y)
 			if isMoving then
 			  mvObject.Left = mvObject.Left + X - orgX
 			  mvObject.Top  = mvObject.Top  + Y - orgY

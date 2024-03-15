@@ -56,12 +56,11 @@ end
 
 local function setupImages()
 	local img = VCL.Image()	
-	local str = VCL.Stream()
+	local str = VCL.MemoryStream()
 	local add = function(t,b)
-		-- skip first 8 bytes
-		local memStr,size = str.LoadFromHex(b:sub(9))
-		img.picture:LoadFromStream(memStr) 	
-		memStr:Free()
+		-- skip first 4 bytes
+		str:LoadFromHex(b, 5)
+		img.picture:LoadFromStream(str)
 		return t:Add(img.picture.bitmap,nil)
 	end
 	
@@ -166,7 +165,6 @@ end
 local function setupMainForm()
 	setupImages()
 	setupMenus()
-	tvForm.Items.KeepCollapse = false
 	pgTabs.ActivePage=tsCompTree
 	-- show components
 	fillView("C")
