@@ -460,12 +460,13 @@ tvForm.OnEdited=function(Sender,Node,S)
 		S = S:gsub('%W','')	
 		elem.vclObj.name = S
 		elem.name = S
-		elem.props['Name']="'"..S.."'"		
+		elem.props.Name = S
 	else 
 		S = elem.vclObj.name
 	end		
 	return S
 end
+
 tvForm.OnMouseDown=function(Sender,Button,ShiftState, X,Y)
 	if Button=='mbRight' then
 		elem = tvForm:GetNodeAt(X,Y)		
