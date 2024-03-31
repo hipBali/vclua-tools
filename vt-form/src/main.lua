@@ -104,7 +104,6 @@ local function setupMenus()
 	})
 	local mainMenu = VCL.MainMenu(frmMain, "mmmainmenu")
 	mainMenu.Images = toolImages
-	mainMenu.showhint=true
 	VCL.loadMenu(mainMenu, {
 		{caption="&File",   
 			submenu={
