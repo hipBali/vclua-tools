@@ -10,7 +10,7 @@ require "designer"
 local uniNames={}
 local compTargets={
 	ActionList={Action=1},
-	Form=1,Panel=1,GroupBox=1,ScollBox=1,TabSheet=1,
+	Form=1,Panel=1,GroupBox=1,ScrollBox=1,TabSheet=1,
 	PageControl={TabSheet=1,},
 	ToolBar={ToolButton=1,},
 }
