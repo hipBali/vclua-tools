@@ -171,6 +171,6 @@ local function setupMainForm()
 end
 
 setupMainForm()
-frmMain.OnActivate = function() prjPreview() end
+frmMain.OnShow = function() prjPreview() end
 frmMain:ShowModal()
 
