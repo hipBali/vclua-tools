@@ -469,12 +469,12 @@ end
 
 tvForm.OnMouseDown=function(Sender,Button,ShiftState, X,Y)
 	if Button=='mbRight' then
-		elem = tvForm:GetNodeAt(X,Y)		
+		local elem = tvForm:GetNodeAt(X,Y)
 		if elem then				
 			setCurElem(findElem(elem))			
 		end	
 	elseif Button=='mbLeft' and ShiftState:find('ssCtrl') then
-		elem = tvForm:GetNodeAt(X,Y)		
+		local elem = tvForm:GetNodeAt(X,Y)
 		if elem then
 			elem = findElem(elem)
 			MoveComponent(elem.vclObj, function()
