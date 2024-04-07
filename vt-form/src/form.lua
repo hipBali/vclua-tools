@@ -6,13 +6,15 @@
 -- ***************************************
 VCL = require "vcl.core"
 
+defaultCaption='VCLua form tool v'.._VCLFB_VERSION
+
 frmMain = VCL.Form()
 frmMain._ = {
 	-- Position='poDesktopCenter',
 	Left=0,
 	Top=30,
 	Width=600,
-	Caption='VCLua form tool v'.._VCLFB_VERSION,
+	Caption=defaultCaption,
 	Height=600,
 }
 	compImages = VCL.ImageList(frmMain)

@@ -23,6 +23,11 @@ function getProject()
 	return prjTable
 end
 
+local function setPrjName(name)
+  prjName = name
+  frmMain.Caption = name and defaultCaption..': '..name or defaultCaption
+end
+
 function setCurElem(elem)
 	elem = elem or prjTable.items[1]
 	-- save virtual element content into property, except on initialization
@@ -45,7 +50,7 @@ function getCurElem()
 end
 
 local function _saveProject(fileName)
-	prjName = fileName
+	setPrjName(fileName)
 	fileio.saveJson(fileName,toJson())
 end
 
@@ -68,7 +73,7 @@ function prjSave()
 end
 
 local function _newProject()
-	prjName = nil	
+	setPrjName(nil)
 	curElem = nil
 	if prjTable then
 		for k,v in pairs(prjTable.items) do
@@ -110,26 +115,30 @@ local function loadProject(fileName)
 	prjInit = nil
 end
 
+function prjPreview()
+	prjForm.vclObj.Position = "poScreenCenter"
+	prjForm.vclObj:ShowOnTop()
+end
+
 function prjLoad()
 	local fileName = openDialog(frmMain,"Open form","forms/",
 					 "VCLua forms|*.json","[ofFileMustExist]")
 	if type(fileName)=="string" then
 		loadProject(fileName)
-		prjName = fileName
+		setPrjName(fileName)
+		prjPreview()
 	end
-end
-
-function prjPreview()
-	prjForm.vclObj:ShowOnTop()
 end
 
 function prjRefresh()
 	local isPrv = prjForm.vclObj.visible
 	local frm = toJson()
+	local name = prjName
 	prjInit = true
 	tvForm.OnSelectionChanged=nil
 	_newProject()
 	fromJson(frm)
+	setPrjName(name)
 	prjForm = prjTable.items[1]
 	setCurElem(prjForm,true)
 	tvForm:FullExpand()	
