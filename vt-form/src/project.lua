@@ -33,7 +33,6 @@ function setCurElem(elem)
 	-- save virtual element content into property, except on initialization
 	if curElem and curElem.vclObj and curElem.vclObj.virtual and prjInit==nil then
 		curElem.vclObj.code = seCode.Text
-		setProperty(curElem.vclObj, "code", seCode.Text)
 	end
 	if elem.vclObj.virtual then
 		tsProperties.TabVisible = false
@@ -51,7 +50,7 @@ end
 
 local function _saveProject(fileName)
 	setPrjName(fileName)
-	fileio.saveJson(fileName,toJson())
+	fileio.saveJson(fileName,toJson(prjForm))
 end
 
 function prjSaveAs()
@@ -76,7 +75,12 @@ local function _newProject()
 	setPrjName(nil)
 	curElem = nil
 	if prjTable then
-		for k,v in pairs(prjTable.items) do
+		if compPropGrid.collectionForm then
+			-- this is only needed to prevent crashes when this form was ever used
+			compPropGrid.collectionForm:Close()
+			compPropGrid.oldTIObject = nil
+		end
+		for _,v in ipairs(prjTable.items) do
 			if v.vclObj and v.vclObj.virtual==nil then
 				v.vclObj:Free()
 			end
@@ -85,15 +89,12 @@ local function _newProject()
 	prjTable = {items={}}
 	-- prjSrc:Clear()
 	tvForm.Items:Clear()
-	resetUniqueNames()
 	return true
 end
 
 function prjNew()
 	_newProject()
-	local t = addComponent(nil,"Form")	
-	t.vclObj.position = "poScreenCenter"
-	prjForm = prjTable.items[1]
+	prjForm = addComponent(nil,"Form")
 	setCurElem(prjForm)
 end
 
@@ -102,7 +103,7 @@ local function loadProject(fileName)
 	tvForm.OnSelectionChanged=nil
 	local frm = fileio.loadJson(fileName)
 	_newProject()
-	fromJson(frm)
+	tableToTreeView(fromJson(frm,prjTable))
 	prjForm = prjTable.items[1]
 	setCurElem(prjForm,true) -- true means initializaton only, no property change
 	tvForm:FullExpand()	

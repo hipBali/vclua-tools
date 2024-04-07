@@ -20,7 +20,7 @@ local ComponentClipBoard = {}
 -- returns: child table, orig parent table, index
 function findElem(elem,t)
 	t = t or getProject() 
-	for k,v in pairs(t.items) do
+	for k,v in ipairs(t.items) do
 		if v.obj.AbsoluteIndex==elem.AbsoluteIndex then
 			return v,t,k							
 		end
@@ -30,88 +30,63 @@ function findElem(elem,t)
 	return nil
 end
 
-local function findElemByName(name,t)
-	t = t or getProject() 
-	for k,v in pairs(t.items) do
-		if v.name==name then
-			return v							
-		end
-		local r = findElemByName(name,v)
-		if r then return r end
-	end	
-	return nil
-end
-
-local function getUniqueName(compName)
-	local n = uniNames[compName] or 0
-	n = n + 1
-	uniNames[compName] = n
-	return compName..n
-end
-
-function resetUniqueNames()
-	uniNames ={}
+local function getUniqueName(items, compName, name)
+	local n = 0
+	local names = {}
+	for _,item in ipairs(items or {}) do names[item.name] = true end
+	if name and not names[name] then return name end
+	while true do
+		n = n + 1
+		name = compName..n
+		if not names[name] then return name end
+	end
 end
 
 -- Property getter/setter
-function getProperty(obj, pPath)
-	local p = obj
-	local propValue = p[pPath]
-	local root = nil
-	for s in string.gmatch(pPath, '([^%.]+)') do	
-		root = root or s
-		-- test array/collection
-		local n = s:find('%[')
-		if n then
-			local index = s:match("%[(%w+)%]")
-			local coll = s:sub(1,n-1)
-			if p[coll] and p[coll].GetItem then
-				p = p[coll]:GetItem(index)
-			end
+function getProperty(p, pPath)
+	local propPath, lastComponent = {}, nil
+	for s in string.gmatch(pPath, '([^%.]+)') do
+		if type(p) == "table" and p.Handle and p:is('TComponent') then
+			lastComponent = p
+			propPath = {s}
 		else
-			if (p[s]) then
-				propValue = p[s] or propValue
-				p = p[s]
-			end
+			table.insert(propPath,s)
 		end
+		p = p[s]
 	end
-	return propValue, root 
+	return p, lastComponent, propPath
 end
 
-function setProperty(obj, pPath, pValue)
-	local p = obj
-	local propName = nil
-	for s in string.gmatch(pPath, '([^%.]+)') do	
-		local n = s:find('%[')
-		if n then	
-			local index = s:match("%[(%w+)%]")
-			local coll = s:sub(1,n-1)
-			-- collection has GetItem?
-			if p[coll] and p[coll].GetItem then
-				local pp = p[coll]:GetItem(index)
-				if pp==nil then
-					p = p[coll]:Add()
-				else
-					p = pp
+-- can use getNamePath result as input
+-- path can point to property of class type
+local function findElemByPath(path)
+	path = type(path) == "string" and path:split() or path
+	local len = #path
+	local function impl(depth,t)
+		for _,v in ipairs(t.items) do
+			if v.name == path[depth] then
+				if depth == len then return v
+				else return impl(depth + 1, v)
 				end
 			end
-		elseif type(p[s])=="table" then
-			p = p[s]			
 		end
-		propName = s
-	end		
-	propName = propName or pPath
-	p[propName] = pValue	
+		return nil, depth, t
+	end
+	local elem, depth, t = impl(1,getProject())
+	if elem then return elem, elem.vclObj end
+	local suf = {}
+	for i = depth,len do table.insert(suf,path[i]) end
+	return t, (getProperty(t.props, table.concat(suf,".")))
 end
 
-local function mkObjTable(parent,compName,vclParent)	
+local function mkObjTable(p,compName,name)
 
-	local c = tvForm.Items:Add(parent,compName)	
-	c.StateIndex = cmpImg[compName].ii	
-	local o = VCL[compName](vclParent,'')
-	local s = getUniqueName(compName)
-	
-	o.Name = s	
+	local c = tvForm.Items:Add(p and p.obj,compName)
+	c.StateIndex = cmpImg[compName].ii
+	local o = VCL[compName](p and p.vclObj,'')
+	local s = getUniqueName(p and p.items, compName, name)
+
+	o.Name = s
 	c.Text = s
 	local t = {
 		obj=c,
@@ -123,6 +98,11 @@ local function mkObjTable(parent,compName,vclParent)
 		props={},
 		collections={},
 	}				
+	if p then
+		o.OnMouseDown=function(o,Button,ShiftState, X,Y)
+			if Button=='mbLeft' and ShiftState:find('ssCtrl') then MoveComponent(o,t) end
+		end
+	end
 	return t
 end	
 
@@ -142,11 +122,9 @@ local function checkFixedSource(sName)
 	return compFixed[sName]
 end
 
-function addComponent(parent, compName)	
-	local t = nil
-	local n = 0
+function addComponent(parent, compName, name)
 	if parent==nil then
-		t = mkObjTable(parent,compName,nil)
+		local t = mkObjTable(nil,compName,name)
 		t.vclObj.Caption = t.name
 		if t.vclObj.virtual then
 		else
@@ -154,72 +132,75 @@ function addComponent(parent, compName)
 			-- t.vclObj.left = 100
 			-- t.vclObj.top = 100
 		end
-		n = #(getProject().items) + 1
-		getProject().items[n] = t
+		table.insert(getProject().items, t)
+		return t
 	else	
 		local pt = findElem(parent)
 		-- isTarget?
+		-- TODO: use TControl.CheckNewParent maybe? first create with form as parent
 		if checkTarget(pt.class,compName) then
-			n = #pt.items + 1
-			t = mkObjTable(parent,compName,pt.vclObj)
-			pt.items[n] = t
+			local t = mkObjTable(pt,compName,name)
+			table.insert(pt.items, t)
+			return t
 		else 
 			return nil
 		end
-	end	
-	if t then 
-		-- setCurElem(t) 
 	end
-	return t,n	
 end
 
 local function moveChild(child,parent)
 	local ct,cp,cn = findElem(child) -- child table, orig parent table, index
 	local pt = findElem(parent)	-- new parent table
-	local n = #pt.items + 1			
-	pt.items[n] = ct
-	cp.items[cn] = nil	
-	setCurElem(pt.items[n])
-	prjRefresh()
+	local name = getUniqueName(pt.items, ct.class, ct.name)
+	table.insert(pt.items, ct)
+	table.remove(cp.items, cn)
+	ct.vclObj.Parent = pt.vclObj
+	if name ~= ct.name then
+		ct.name = name
+		-- temporary name clashes seem to work, so first change Parent then change name
+		ct.vclObj.Name = name
+	end
+	return ct
 end
 
-local function addElemToTreeView(t,p,level)
-	level = level or 1	
-	for k,v in pairs(t) do
+local function addElemToTreeView(t,p)
+	for _,v in ipairs(t) do
 		local c
-		if level==1 then
+		if not p then
 			c = tvForm.Items:Add(p,v.name)
 		else
 			c = tvForm.Items:AddChild(p,v.name)
 		end
 		c.StateIndex = cmpImg[v.class].ii
 		v.obj = c
-		addElemToTreeView(v.items,c,level+1)
+		addElemToTreeView(v.items,c)
 	end
 end
 
-local function tableToTreeView()
+function tableToTreeView(toSelect)
 	tvForm:BeginUpdate()
 	tvForm.Items:Clear()		
 	for k,v in pairs(getProject()) do
 		addElemToTreeView(v)
 	end
+	setCurElem(toSelect)
+	tvForm:SetFocus()
 	tvForm:EndUpdate()
 end
 
 
 ---------------------------------------------------------------
-local function deleteComponentTree(t,doremove)
-	for k,v in pairs(t.items) do
-		deleteComponentTree(v,doremove)
+local function deleteComponentTree(t)
+	for _,v in ipairs(t.items) do
+		deleteComponentTree(v)
 	end
-	if doremove and t.vclObj and t.vclObj.virtual==nil then
+	if t.vclObj and t.vclObj.virtual==nil then
 		t.vclObj = t.vclObj:Free()
 	end
 end
 
 -- remove element
-function DeleteComponent()
+function DeleteComponent(callback) -- or Sender
 	local elem = tvForm.Selected
 	if elem then
 		local ct,cp,cn = findElem(elem)
@@ -227,23 +208,18 @@ function DeleteComponent()
 			VCL.ShowMessage("The root element can't be removed!")
 			return
 		end
-		deleteComponentTree(ct,true)	
-		cp.items[cn] = nil	
-		tableToTreeView()
-		if (cn>1) then
-			setCurElem(cp.items[cn-1])
-		else
-			setCurElem(cp)
-		end		
-	end			
+		if type(callback) == 'function' then callback(ct) end
+		deleteComponentTree(ct)
+		table.remove(cp.items, cn)
+		tableToTreeView(cn>1 and cp.items[cn-1] or cp)
+	end
 end
 
-local function copyComponentTree(p,t)
-	local n = #p.items + 1
-	local ct = mkObjTable(p,t.class,p.vclObj)
-	p.items[n] = ct	
-	for k,v in pairs(t.items) do		
-		copyComponentTree(ct,v)
+local function copyComponentTree(p,t,name)
+	local ct = mkObjTable(p,t.class,name)
+	table.insert(p.items, ct)
+	for _,v in ipairs(t.items) do
+		copyComponentTree(ct,v,v.name)
 	end
 	return ct
 end
@@ -257,18 +233,65 @@ function DuplicateComponent()
 			VCL.ShowMessage("The root element can't be duplicated!")
 			return
 		end		
-		elem = copyComponentTree(cp,ct)
-		tableToTreeView()
-		setCurElem(elem)		
+		tableToTreeView(copyComponentTree(cp,ct))
 	end			
 end
 
-local function toClipboard(t)
-	-- clean
-	if type(ComponentClipBoard)=="table" and ComponentClipBoard.items then
-		deleteComponentTree(ComponentClipBoard)
+local function applyCollectionsOrder(srcItem, dstProps)
+	-- apply ID->order for collections
+	if next(srcItem.collections) then
+		for name,order in pairs(srcItem.collections) do
+			local t,items = {},#order
+			for i = 1,items do t[i] = srcItem.props[name][order[i]] end
+			dstProps[name] = t
+		end
 	end
-	ComponentClipBoard = table.copy(t)
+end
+
+local function getPaths(vclo)
+	local rootPathTable = getNamePathTable(vclo)
+	local rootPath = table.concat(rootPathTable,'.')
+	table.remove(rootPathTable)
+	if rootPathTable[1] then
+		return rootPath, table.concat(rootPathTable,'.')
+	else
+		-- processing top form
+		return "(none)","(none)"
+	end
+end
+
+function toJson(root)
+	local rootPath, rootParentPath = getPaths(root.vclObj)
+	local rpPos = #rootPath+1
+	local rppPos = #rootParentPath+1
+	local function vcloToRelativePath(vclo)
+		if type(vclo) == "table" then
+			-- erase empty tables which arise when incorrect values are set or when previous changes are undone
+			if next(vclo) == nil then return true, nil
+			elseif vclo.Handle then
+				local path = getNamePath(vclo)
+				if path:find(rootPath,1,true) == 1 then return true, '<root>'..path:sub(rpPos)..'.vt-form'
+				elseif path:find(rootParentPath,1,true) == 1 then return true, '<rootparent>'..path:sub(rppPos)..'.vt-form'
+				else return true, path..'.vt-form'
+				end
+			end
+		else return false
+		end
+	end
+	local function getObject(o)
+		local props = table.copy(o.props, vcloToRelativePath)
+		applyCollectionsOrder(o, props)
+		local function copyItem(v)
+			if type(v) == 'table' and v.class then return true, getObject(v) end
+		end
+		return {class=o.class, name=o.vclObj.name, props=props, items=table.copy(o.items, copyItem)}
+	end
+	local res = getObject(root)
+	return res
+end
+
+local function toClipboard(t)
+	ComponentClipBoard = toJson(t)
 end
 
 function CopyComponent()
@@ -279,123 +302,62 @@ function CopyComponent()
 			VCL.ShowMessage("The root element can't be copied!")
 			return
 		end		
-		-- ComponentClipBoard		
 		toClipboard(ct)
 	end			
 end
 
 function CutComponent()
-	local elem = tvForm.Selected
-	if elem then
-		local ct,cp,cn = findElem(elem)
-		if ct.obj.AbsoluteIndex==0 then
-			VCL.ShowMessage("The root element can't be removed!")
-			return
-		end		
-		-- ComponentClipBoard
-		toClipboard(ct)
-		cp.items[cn] = nil		
-		tableToTreeView()
-		if (cn>1) then
-			setCurElem(cp.items[cn-1])
-		else
-			setCurElem(cp)
-		end	
-	end			
+	DeleteComponent(toClipboard)
 end
 
-local function pasteComponentTree(p,t)
-	-- exists?
-	local e = findElemByName(t.name)
-	local n = #p.items + 1	
-	-- new object required
-	local ne = nil
-	if e then	
-		local ne = mkObjTable(p,t.class,p.vclObj)
-		ne.events= table.copy(t.events)
-		ne.props = table.copy(t.props)
-		ne.props["Name"] = ne.name		
-		for propPath,_ in pairs(ne.props) do
-			if (propPath ~= "Name") then
-				setProperty(ne.vclObj, propPath, t.vclObj[propPath])
-			end
-		end			
-		p.items[n] = ne
-		for k,v in pairs(t.items) do
-			pasteComponentTree(ne,v)
+function fromJson(src,t)
+	-- t is table with vclObj==new parent of root(s) of src
+	-- props can contain references to objects which are later in JSON
+	-- so first create objects w/o props, then set properties
+	local function addTree(src,p,name)
+		local t = addComponent(p.obj,src.class,name)
+		if t then for _,c in ipairs(src.items) do addTree(c,t,c.name) end end
+		return t
+	end
+	if src[1] then
+		-- support old JSONs
+		local elems = {}
+		for i,elem in ipairs(src) do
+			elem.items = {}
+			elems[elem.name] = elem
+			if i ~= 1 then table.insert(elems[elem.parent].items,elem) end
 		end
-	else
-		t.vclObj.Parent = p.vclObj
-		p.items[n] = t
-	end	
-	prjRefresh()
+		src = src[1]
+	end
+	-- src.name will not apply if there is a sibling name clash
+	local res = addTree(src, t, src.name)
+	if not res then return nil end
+	local rootPath, rootParentPath = getPaths(res.vclObj)
+	local function relPathToObject(v)
+		if type(v) == "string" then
+			local words = v:split()
+			if table.remove(words) == 'vt-form' then
+				local path = table.concat(words,'.'):gsub('<rootparent>',rootParentPath,1):gsub('<root>',rootPath,1)
+				local elem, vclo = findElemByPath(path)
+				--print('replaced '..table.concat(words,'.')..' with '..path..' = '..getNamePath(vclo))
+				return true, vclo
+			end
+		end
+	end
+	local function setProps(src,t)
+		t.props = table.copy(src.props, relPathToObject) or {}
+		if next(t.props) then t.vclObj._ = t.props end
+		for i,c in ipairs(t.items) do setProps(src.items[i],c) end
+	end
+	setProps(src,res)
+	return res
 end
 
 function PasteComponent()
 	local elem = tvForm.Selected
 	if elem then
-		local ct,cp,cn = findElem(elem)			
-		pasteComponentTree(ct,ComponentClipBoard)		
-		tableToTreeView()
+		tableToTreeView(fromJson(ComponentClipBoard,findElem(elem)))
 	end			
-end
-
--- export/import json
-
-function toJson()
-	local getObject
-	getObject = function(t,parent,o)
-		table.insert(t,{class=o.class, name=o.vclObj.name, parent=parent, props=o.props})
-		for _,c in pairs(o.items) do
-			getObject(t,o.vclObj.name,c)
-		end
-		return t
-	end
-	local frm = {}
-	local p = getProject() 
-	for _,item in pairs(p.items) do
-		if item.vclObj and item.vclObj.virtual==nil then
-			getObject(frm,nil,item)
-		end
-	end
-	return frm
-end
-
-function fromJson(frm)
-	-- buildProject(frm)
-	local p = {}
-	for _,item in pairs(frm) do
-		local parent = item.parent
-		if type(parent) == "string" then
-			parent = p[parent]
-		end
-		local t = addComponent(parent,item.class)
-		t.name = item.name
-		p[t.name] = t.obj
-		for k,v in pairs(item.props) do
-			local propPath = k
-			local propValue = v
-			if type(v)=='string' then
-				propValue = v:match("%[(%w+)%]") or v
-			end
-			if (type(propValue)=="table") then
-				t.vclObj[propPath]=propValue					
-			else					
-				t.props[propPath]=propValue
-			end
-			if t.vclObj and propPath and propValue ~= nil then					
-				setProperty(t.vclObj, propPath, propValue)
-			end	
-			-- set original name
-			if propPath=='Name' then
-				t.name = propValue
-				t.obj.Text = propValue
-			end
-		end
-
-		-- t.vclObj._ = item.props	
-	end
-	tableToTreeView()
 end
 
 -- component drag&drop events
@@ -409,41 +371,98 @@ tvForm.OnDragDrop=function(Sender,Source,X,Y)
 	local parent = tvForm:GetNodeAt(X,Y)
 	if parent and Source.Selected then
 		if Source.Handle==compListTree.Handle then
-			local compName = Source.Selected.Text
-			if addComponent(parent, compName) then
+			local t = addComponent(parent, Source.Selected.Text)
+			if t then
 				parent.Expanded=true
+				tableToTreeView(t)
 			end
-			tableToTreeView()								
 		else		
 			local pt = findElem(parent)
 			local ct = findElem(Source.Selected)			
 			-- isTarget?
 			if checkTarget(pt.class,ct.class) and checkFixedSource(ct.class)==nil then
-				moveChild(Source.Selected,parent)
-				tableToTreeView()			
+				tableToTreeView(moveChild(Source.Selected,parent))
 			end			
 		end
 	end
 end
 
+local function CollectionItemClick(Sender)
+  local i = Sender.ItemIndex
+  if i>-1 and i<Sender.Count then
+    compPropGrid.TIObject = Sender.Parent.Collection:Items(i)
+    Sender.Parent:CollectionListBoxClick(nil)
+  end
+end
+local function CollectionEditorClose(Sender)
+  compPropGrid.TIObject = compPropGrid.oldTIObject
+  return 'caHide'
+end
+local function GetOnCollectionModified(cb,fm,s)
+  return function(Sender)
+    if s == 'del' then compPropGrid.TIObject = nil end
+    cb(fm,Sender)
+    if s == 'del' then fm.CollectionListBox:Click() end
+    local coll = fm.Collection
+    local path = getNamePath(fm.OwnerPersistent)
+    local elem = findElemByPath(path)
+    local coll_desc = elem.collections[fm.PropertyName] or {}
+    for i = 1,coll.Count do
+       -- IDs are 0-based, so +1
+      coll_desc[i] = coll:Items(i-1).ID+1
+    end
+    elem.collections[fm.PropertyName] = coll_desc
+  end
+end
+local collectionFormInited = false
+
+compPropGrid.OnEditorFilter=function(Sender,editor,show)
+  --print(editor.ClassName, editor:GetPropertyPath())
+  if editor:is('TCollectionPropertyEditor') then
+    compPropGrid.oldTIObject = compPropGrid.TIObject
+    -- this form is a singleton, so maybe TODO: add cb for OnShow to set oldTIObject
+    if not collectionFormInited then
+      local fm = editor:ShowCollectionEditor(nil, nil, '')
+      compPropGrid.collectionForm = fm
+      fm.CollectionListBox.OnClick = CollectionItemClick
+      fm.OnClose = CollectionEditorClose
+      fm.actAdd.OnExecute=GetOnCollectionModified(fm.actAddExecute,fm,'add')
+      fm.actDel.OnExecute=GetOnCollectionModified(fm.actDelExecute,fm,'del')
+      fm.actMoveDown.OnExecute=GetOnCollectionModified(fm.actMoveUpDownExecute,fm,'down')
+      fm.actMoveUp.OnExecute=GetOnCollectionModified(fm.actMoveUpDownExecute,fm,'up')
+      fm:Hide()
+      collectionFormInited = true
+    end
+  end
+end
+
 compPropGrid.OnModified=function(Sender) 
--- Property Grid events
-	local elem=getCurElem()
-	local path = Sender:PropertyPath(Sender:GetActiveRow())
+	local row = Sender:GetActiveRow()
+	local path = Sender:PropertyPath2(row)
+
 	local pp = path:split()
-	local propName = pp[#pp]
-	local propValue = getProperty(Sender.TIObject,table.concat(pp,"."))
-	local prop = elem.props
-	-- filter out sets
-	if type(propValue)=="string" and propValue:find("%b[]") and propValue:find(propName) then
-		table.remove(pp,#pp)
-		propName = pp[#pp]
+	-- fix path for sets
+	if row.Editor:is('TSetElementPropertyEditor') then table.remove(pp) end
+	local propValue, lastComponent, propPath = getProperty(Sender.TIObject,table.concat(pp,'.'))
+	-- check if we are editing property indirectly, e.g. for AnchorSide.Control
+	local elem=getCurElem()
+	if lastComponent and (lastComponent.Handle ~= Sender.TIObject.Handle) then
+		local vclo
+		elem, vclo = findElemByPath(getNamePath(lastComponent))
+		pp = propPath
 	end
-	for i,p in pairs(pp) do
-		if i<#pp then
-			prop[p] = prop[p] or {}
-			prop = prop[p]
-		end
+	local propName = table.remove(pp)
+	-- fix path for collection item properties
+	local collectionField = Sender.TIObject:GetNamePath():match('.+%.([_%w]+)%[[^[%]]+%]$')
+	if collectionField then
+		table.insert(pp,1,collectionField)
+		table.insert(pp,2,Sender.TIObject.ID+1)
+	end
+	--print(path,table.concat(pp,'.'), propName, propValue)
+	local prop = elem.props
+	for _,p in ipairs(pp) do
+		prop[p] = prop[p] or {}
+		prop = prop[p]
 	end
 	prop[propName] = propValue
 end
@@ -477,11 +496,7 @@ tvForm.OnMouseDown=function(Sender,Button,ShiftState, X,Y)
 		local elem = tvForm:GetNodeAt(X,Y)
 		if elem then
 			elem = findElem(elem)
-			MoveComponent(elem.vclObj, function()
-				elem.props['Left'] = elem.vclObj.left
-				elem.props['Top'] = elem.vclObj.top
-				setCurElem(elem)
-			end)			
+			MoveComponent(elem.vclObj,elem)
 		end
 	end
 end

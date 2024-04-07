@@ -134,9 +134,9 @@ frmMain._ = {
 		tsProperties._ = {
 			Caption='Properties',
 		}
-			compPropGrid = VCL.PropertyGrid(tsProperties)
+			compPropGrid = VCL.TIPropertyGrid(tsProperties)
 			compPropGrid._ = {
 				Align='alClient',
 				-- Filter='[tkInteger,tkChar,tkEnumeration,tkFloat,tkSet,tkMethod,tkSString,tkLString,tkAString,tkWString,tkVariant,tkArray,tkRecord,tkInterface,tkClass,tkObject,tkWChar,tkBool,tkInt64,tkQWord,tkDynArray,tkInterfaceRaw,tkProcVar,tkUString,tkUChar,tkHelper,tkFile,tkClassRef,tkPointer]'
-				Filter='[tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkSString, tkLString, tkAString, tkWString, tkVariant, tkClass, tkWChar, tkBool, tkInt64, tkProcVar, tkUString, tkUChar, tkFile]',
+				Filter='[tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkSString, tkLString, tkAString, tkWString, tkClass, tkWChar, tkBool, tkInt64, tkQWord, tkUString, tkUChar]',
 			}
