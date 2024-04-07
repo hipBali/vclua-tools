@@ -95,6 +95,7 @@ local function setupMenus()
 		{name="fileSaveAs", caption="Save form as ...", imageIndex=3, onexecute=prjSaveAs },		
 		{name="fileQuit", caption="Exit", shortcut="Ctrl+Q", imageIndex=5, onexecute=prjExit},			
 
+		{name="frmRefresh", caption="Form refresh", shortcut="Ctrl+R",  onexecute=prjRefresh},
 		{name="frmPreview", caption="Form preview", shortcut="Ctrl+P",  onexecute=prjPreview},
 				
 		{name="aAbout", caption="About", shortcut="", imageIndex=7, onexecute=function() 
@@ -114,6 +115,7 @@ local function setupMenus()
 				{caption="-",},					
 				{action=mainActions["fileSaveAs"]},	
 				{caption="-",},	
+				{action=mainActions["frmRefresh"]},	
 				{action=mainActions["frmPreview"]},	
 				{caption="-",},
 				{action=mainActions["fileQuit"]}  

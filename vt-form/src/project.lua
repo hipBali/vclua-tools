@@ -98,14 +98,14 @@ function prjNew()
 	setCurElem(prjForm)
 end
 
-local function loadProject(fileName)
+local function loadProject(frm,name)
 	prjInit = true
 	tvForm.OnSelectionChanged=nil
-	local frm = fileio.loadJson(fileName)
 	_newProject()
 	tableToTreeView(fromJson(frm,prjTable))
+	setPrjName(name)
 	prjForm = prjTable.items[1]
-	setCurElem(prjForm,true) -- true means initializaton only, no property change
+	setCurElem(prjForm)
 	tvForm:FullExpand()	
 	tvForm.OnSelectionChanged=function(Sender)
 		local elem = Sender.Selected
@@ -125,7 +125,7 @@ function prjLoad()
 	local fileName = openDialog(frmMain,"Open form","forms/",
 					 "VCLua forms|*.json","[ofFileMustExist]")
 	if type(fileName)=="string" then
-		loadProject(fileName)
+		loadProject(fileio.loadJson(fileName),fileName)
 		setPrjName(fileName)
 		prjPreview()
 	end
@@ -133,23 +133,7 @@ end
 
 function prjRefresh()
 	local isPrv = prjForm.vclObj.visible
-	local frm = toJson()
-	local name = prjName
-	prjInit = true
-	tvForm.OnSelectionChanged=nil
-	_newProject()
-	fromJson(frm)
-	setPrjName(name)
-	prjForm = prjTable.items[1]
-	setCurElem(prjForm,true)
-	tvForm:FullExpand()	
-	tvForm.OnSelectionChanged=function(Sender)
-		local elem = Sender.Selected
-		if elem then	
-			setCurElem(findElem(elem))
-		end
-	end
-	prjInit = nil
+	loadProject(toJson(prjForm), prjName)
 	if isPrv then
 		prjPreview()
 	end
