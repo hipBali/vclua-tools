@@ -12,7 +12,7 @@ function MoveComponent(cmp,elem)
 	width = origObject.width
 	height = origObject.height
 	local origin = origObject.ControlOrigin
-	mvObject = VCL.Form(nil,"move_"..cmp.name, {
+	mvObject = VCL.Form(nil,"move_"..cmp.Name, {
 		Color='clRed',
 		BorderStyle = 'bsNone',
 		AlphaBlend=true,

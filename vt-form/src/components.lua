@@ -79,25 +79,30 @@ local function findElemByPath(path)
 	return t, (getProperty(t.props, table.concat(suf,".")))
 end
 
+local function setName(elem,name,fixObj)
+	elem.name = name
+	elem.vclObj.Name = name
+	if fixObj then elem.obj.Text = name end
+	if elem.vclObj.Caption == name then elem.props.Caption = nil end -- prevent errors later when name is changed
+end
+
 local function mkObjTable(p,compName,name)
 
-	local c = tvForm.Items:Add(p and p.obj,compName)
-	c.StateIndex = cmpImg[compName].ii
 	local o = VCL[compName](p and p.vclObj,'')
 	local s = getUniqueName(p and p.items, compName, name)
+	local c = tvForm.Items:Add(p and p.obj,s)
+	c.StateIndex = cmpImg[compName].ii
 
-	o.Name = s
-	c.Text = s
 	local t = {
 		obj=c,
 		vclObj=o,		
-		name=s,
 		class=compName,
 		items={},
 		events={},
 		props={},
 		collections={},
 	}				
+	setName(t,s) -- some components might not accept name in creator function, so set it here
 	if p then
 		o.OnMouseDown=function(o,Button,ShiftState, X,Y)
 			if Button=='mbLeft' and ShiftState:find('ssCtrl') then MoveComponent(o,t) end
@@ -125,7 +130,6 @@ end
 function addComponent(parent, compName, name)
 	if parent==nil then
 		local t = mkObjTable(nil,compName,name)
-		t.vclObj.Caption = t.name
 		if t.vclObj.virtual then
 		else
 			-- t.vclObj:Hide()
@@ -156,9 +160,8 @@ local function moveChild(child,parent)
 	table.remove(cp.items, cn)
 	ct.vclObj.Parent = pt.vclObj
 	if name ~= ct.name then
-		ct.name = name
 		-- temporary name clashes seem to work, so first change Parent then change name
-		ct.vclObj.Name = name
+		setName(ct,name)
 	end
 	return ct
 end
@@ -314,9 +317,9 @@ function fromJson(src,t)
 	-- t is table with vclObj==new parent of root(s) of src
 	-- props can contain references to objects which are later in JSON
 	-- so first create objects w/o props, then set properties
-	local function addTree(src,p,name)
-		local t = addComponent(p.obj,src.class,name)
-		if t then for _,c in ipairs(src.items) do addTree(c,t,c.name) end end
+	local function addTree(src,p)
+		local t = addComponent(p.obj,src.class,src.name)
+		if t then for _,c in ipairs(src.items) do addTree(c,t) end end
 		return t
 	end
 	if src[1] then
@@ -330,7 +333,7 @@ function fromJson(src,t)
 		src = src[1]
 	end
 	-- src.name will not apply if there is a sibling name clash
-	local res = addTree(src, t, src.name)
+	local res = addTree(src, t)
 	if not res then return nil end
 	local rootPath, rootParentPath = getPaths(res.vclObj)
 	local function relPathToObject(v)
@@ -345,6 +348,7 @@ function fromJson(src,t)
 		end
 	end
 	local function setProps(src,t)
+		-- for relPathToObject to work component names must already be applied, meaning there should be no 'Name' in src.props
 		t.props = table.copy(src.props, relPathToObject) or {}
 		if next(t.props) then t.vclObj._ = t.props end
 		for i,c in ipairs(t.items) do setProps(src.items[i],c) end
@@ -459,6 +463,10 @@ compPropGrid.OnModified=function(Sender)
 		table.insert(pp,2,Sender.TIObject.ID+1)
 	end
 	--print(path,table.concat(pp,'.'), propName, propValue)
+	if propName == 'Name' and elem.vclObj:is('TComponent') and not next(pp) then
+		setName(elem,propValue,true)
+		return
+	end
 	local prop = elem.props
 	for _,p in ipairs(pp) do
 		prop[p] = prop[p] or {}
@@ -477,9 +485,7 @@ tvForm.OnEdited=function(Sender,Node,S)
 	local elem = findElem(Node)	
 	if string.len(S)>0 then
 		S = S:gsub('%W','')	
-		elem.vclObj.name = S
-		elem.name = S
-		elem.props.Name = S
+		setName(elem,S)
 	else 
 		S = elem.vclObj.name
 	end		
