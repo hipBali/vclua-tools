@@ -6,6 +6,7 @@
 -- ***************************************
 
 require "designer"
+require "loader"
 
 local uniNames={}
 local compTargets={
@@ -322,16 +323,7 @@ function fromJson(src,t)
 		if t then for _,c in ipairs(src.items) do addTree(c,t) end end
 		return t
 	end
-	if src[1] then
-		-- support old JSONs
-		local elems = {}
-		for i,elem in ipairs(src) do
-			elem.items = {}
-			elems[elem.name] = elem
-			if i ~= 1 then table.insert(elems[elem.parent].items,elem) end
-		end
-		src = src[1]
-	end
+	src = toNewFormat(src)
 	-- src.name will not apply if there is a sibling name clash
 	local res = addTree(src, t)
 	if not res then return nil end
