@@ -148,6 +148,10 @@ local function setupMenus()
 		{name="treeSep2", caption="-" },
 		{action=prjActions["treeDelete"]},
 	})
+	compPropGrid.PopupMenu = VCL.PopupMenu()
+	VCL.loadMenu(compPropGrid.PopupMenu, {
+		{action=VCL.Action(compPropGrid.PopupMenu,"gridDelete",{caption="Delete and reload", onexecute=DeletePropAndReload})},
+	})
 end
 
 local function fillView(flag)

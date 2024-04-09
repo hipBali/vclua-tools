@@ -383,6 +383,58 @@ tvForm.OnDragDrop=function(Sender,Source,X,Y)
 	end
 end
 
+local function getPropFromRow()
+	local Sender = compPropGrid
+	local row = Sender:GetActiveRow()
+	local path = Sender:PropertyPath2(row)
+
+	local pp = path:split()
+	-- fix path for sets
+	if row.Editor:is('TSetElementPropertyEditor') then table.remove(pp) end
+	local propValue, lastComponent, propPath = getProperty(Sender.TIObject,table.concat(pp,'.'))
+	-- check if we are editing property indirectly, e.g. for AnchorSide.Control
+	local elem=getCurElem()
+	if lastComponent and (lastComponent.Handle ~= Sender.TIObject.Handle) then
+		local vclo
+		elem, vclo = findElemByPath(getNamePath(lastComponent))
+		pp = propPath
+	end
+	local propName = table.remove(pp)
+	-- fix path for collection item properties
+	local collectionField = Sender.TIObject:GetNamePath():match('.+%.([_%w]+)%[[^[%]]+%]$')
+	if collectionField then
+		table.insert(pp,1,collectionField)
+		table.insert(pp,2,Sender.TIObject.ID+1)
+	end
+	--print(path,table.concat(pp,'.'), propName, propValue)
+	local prop = elem.props
+	for _,p in ipairs(pp) do
+		prop[p] = prop[p] or {}
+		prop = prop[p]
+	end
+	return prop, propName, propValue, elem, pp
+end
+
+compPropGrid.OnMouseDown = function(Sender,Button,Shift,X,Y)
+	if Button == 'mbRight' then
+		local index = Sender:MouseToIndex(Y, true)
+		Sender:SetItemIndexAndFocus(index,true)
+	end
+end
+
+function DeletePropAndReload()
+	local row = compPropGrid:GetActiveRow()
+	if row then
+		local prop, propName, _, elem = getPropFromRow()
+		if prop[propName] then -- Name never is in prop, so no check
+			prop[propName] = nil
+			local path = getNamePath(elem.vclObj)
+			prjRefresh()
+			setCurElem(findElemByPath(path))
+		end
+	end
+end
+
 local function CollectionItemClick(Sender)
   local i = Sender.ItemIndex
   if i>-1 and i<Sender.Count then
@@ -433,36 +485,10 @@ compPropGrid.OnEditorFilter=function(Sender,editor,show)
 end
 
 compPropGrid.OnModified=function(Sender) 
-	local row = Sender:GetActiveRow()
-	local path = Sender:PropertyPath2(row)
-
-	local pp = path:split()
-	-- fix path for sets
-	if row.Editor:is('TSetElementPropertyEditor') then table.remove(pp) end
-	local propValue, lastComponent, propPath = getProperty(Sender.TIObject,table.concat(pp,'.'))
-	-- check if we are editing property indirectly, e.g. for AnchorSide.Control
-	local elem=getCurElem()
-	if lastComponent and (lastComponent.Handle ~= Sender.TIObject.Handle) then
-		local vclo
-		elem, vclo = findElemByPath(getNamePath(lastComponent))
-		pp = propPath
-	end
-	local propName = table.remove(pp)
-	-- fix path for collection item properties
-	local collectionField = Sender.TIObject:GetNamePath():match('.+%.([_%w]+)%[[^[%]]+%]$')
-	if collectionField then
-		table.insert(pp,1,collectionField)
-		table.insert(pp,2,Sender.TIObject.ID+1)
-	end
-	--print(path,table.concat(pp,'.'), propName, propValue)
+	local prop, propName, propValue, elem, pp = getPropFromRow()
 	if propName == 'Name' and elem.vclObj:is('TComponent') and not next(pp) then
 		setName(elem,propValue,true)
 		return
-	end
-	local prop = elem.props
-	for _,p in ipairs(pp) do
-		prop[p] = prop[p] or {}
-		prop = prop[p]
 	end
 	prop[propName] = propValue
 end
