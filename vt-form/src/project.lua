@@ -95,6 +95,8 @@ end
 function prjNew()
 	_newProject()
 	prjForm = addComponent(nil,"Form")
+	prjForm.vclObj.Position = "poScreenCenter"
+	prjForm.props.Position = "poScreenCenter"
 	setCurElem(prjForm)
 end
 
@@ -117,7 +119,6 @@ local function loadProject(frm,name)
 end
 
 function prjPreview()
-	prjForm.vclObj.Position = "poScreenCenter"
 	prjForm.vclObj:ShowOnTop()
 end
 
