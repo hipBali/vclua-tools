@@ -40,7 +40,7 @@ end
 
 -- use getScriptPaths()..'filename.ext' to get a file near to current script file
 function getScriptPaths()
-  local src = debug.getinfo(2).short_src
+  local src = debug.getinfo(2).source:gsub('^@','')
   return src:gsub('[^\\/]+$',''),src
 end
 
