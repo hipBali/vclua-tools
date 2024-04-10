@@ -1,6 +1,6 @@
 -- ***************************************
 -- VCLua Form tool
--- Copyright (C) 2013-2023 Hi-Project Ltd.
+-- Copyright (C) 2013-2024 Hi-Project Ltd.
 --
 -- builder component tree manager
 -- ***************************************
