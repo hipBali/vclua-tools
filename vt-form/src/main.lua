@@ -14,6 +14,7 @@ if VCL._VERSION<_VCLUA_MINVERSION then
 	return
 end
 
+vclapp = VCL.TheApplication()
 require "common"
 toolImg = require "images"		-- application icon gfx imported from Lazarus project
 cmpImg = require "compimages"	-- vclua component gfx imported from Lazarus project
@@ -22,7 +23,18 @@ require "components"
 require "project"
 require "designer"
 
-VCL.Application():Initialize()
+vclapp:Initialize()
+-- it's important to set this callback on the singleton, not on result of VCL.Application()
+vclapp.OnException = function(Sender,E)
+	-- I don't know why, but only this order of encoding settings worked to show correct strings both in messagebox and in console with chcp 1251
+	-- recreate: press Ctrl+C on a Panel in the tree and then press and hold Ctrl+V to insert it in itself deeper and deeper
+	local s = E:ToString()
+	print(s)
+	VCL.setCPWin(true)
+	VCL.ShowMessage(s)
+	VCL.setCPWin(false)
+	print(debug.traceback())
+end
 
 -- vcl.ActionList loader
 function VCL.loadAction(self, t)

@@ -8,13 +8,6 @@
 require "designer"
 require "loader"
 
-local uniNames={}
-local compTargets={
-	ActionList={Action=1},
-	Form=1,Panel=1,GroupBox=1,ScrollBox=1,TabSheet=1,
-	PageControl={TabSheet=1,},
-	ToolBar={ToolButton=1,},
-}
 local compFixed={ Script=1, Form=1 }
 local ComponentClipBoard = {}
 
@@ -112,18 +105,6 @@ local function mkObjTable(p,compName,name)
 	return t
 end	
 
-local function checkTarget(tName,sName)
-	if compTargets[tName]==1 then
-		return true
-	elseif type(compTargets[tName])=="table" then
-		if compTargets[tName][sName] then
-			return true
-		end
-	end
-	VCL.ShowMessage(tName.." can't have control '"..sName.."' as child!")
-	return nil
-end
-
 local function checkFixedSource(sName)
 	return compFixed[sName]
 end
@@ -141,25 +122,23 @@ function addComponent(parent, compName, name)
 		return t
 	else	
 		local pt = findElem(parent)
-		-- isTarget?
-		-- TODO: use TControl.CheckNewParent maybe? first create with form as parent
-		if checkTarget(pt.class,compName) then
-			local t = mkObjTable(pt,compName,name)
-			table.insert(pt.items, t)
-			return t
-		else 
-			return nil
-		end
+		local t = mkObjTable(pt,compName,name)
+		table.insert(pt.items, t)
+		return t
 	end
 end
 
 local function moveChild(child,parent)
 	local ct,cp,cn = findElem(child) -- child table, orig parent table, index
 	local pt = findElem(parent)	-- new parent table
+	local res, err = pcall(function() ct.vclObj.Parent = pt.vclObj end)
+	if not res then
+		print(err)
+		return
+	end
 	table.remove(cp.items, cn)
 	local name = getUniqueName(pt.items, ct.class, ct.name)
 	table.insert(pt.items, ct)
-	ct.vclObj.Parent = pt.vclObj
 	local path = getNamePath(pt.vclObj)..'.'..name
 	prjRefresh()
 	setCurElem(findElemByPath(path))
@@ -373,8 +352,7 @@ tvForm.OnDragDrop=function(Sender,Source,X,Y)
 		else		
 			local pt = findElem(parent)
 			local ct = findElem(Source.Selected)			
-			-- isTarget?
-			if checkTarget(pt.class,ct.class) and checkFixedSource(ct.class)==nil then
+			if checkFixedSource(ct.class)==nil then
 				moveChild(Source.Selected,parent)
 			end			
 		end
