@@ -349,7 +349,7 @@ end
 
 function PasteComponent()
 	local elem = tvForm.Selected
-	if elem then
+	if elem and next(ComponentClipBoard) then
 		tableToTreeView(fromJson(ComponentClipBoard,findElem(elem)))
 	end			
 end
