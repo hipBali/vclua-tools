@@ -156,15 +156,13 @@ end
 local function moveChild(child,parent)
 	local ct,cp,cn = findElem(child) -- child table, orig parent table, index
 	local pt = findElem(parent)	-- new parent table
+	table.remove(cp.items, cn)
 	local name = getUniqueName(pt.items, ct.class, ct.name)
 	table.insert(pt.items, ct)
-	table.remove(cp.items, cn)
 	ct.vclObj.Parent = pt.vclObj
-	if name ~= ct.name then
-		-- temporary name clashes seem to work, so first change Parent then change name
-		setName(ct,name)
-	end
-	return ct
+	local path = getNamePath(pt.vclObj)..'.'..name
+	prjRefresh()
+	setCurElem(findElemByPath(path))
 end
 
 local function addElemToTreeView(t,p)
@@ -365,7 +363,7 @@ tvForm.OnDragOver=function(Sender,Source, X, Y, State)
 end 
 tvForm.OnDragDrop=function(Sender,Source,X,Y)
 	local parent = tvForm:GetNodeAt(X,Y)
-	if parent and Source.Selected then
+	if parent and Source.Selected and parent.Handle ~= Source.Selected.Handle then
 		if Source.Handle==compListTree.Handle then
 			local t = addComponent(parent, Source.Selected.Text)
 			if t then
@@ -377,7 +375,7 @@ tvForm.OnDragDrop=function(Sender,Source,X,Y)
 			local ct = findElem(Source.Selected)			
 			-- isTarget?
 			if checkTarget(pt.class,ct.class) and checkFixedSource(ct.class)==nil then
-				tableToTreeView(moveChild(Source.Selected,parent))
+				moveChild(Source.Selected,parent)
 			end			
 		end
 	end
