@@ -56,7 +56,7 @@ jForm.clFiles.OnClick = function(s)
 	if imgList.ItemIndex ~= -1 then
 		-- lua table index +1
 		img.Picture:LoadFromFile(items[imgList.ItemIndex+1])
-		jForm.lbInfo.Caption = string.format("Width: %d Height: %d", img.Width, img.Height)
+		jForm.lbInfo.Caption = string.format("Width: %d Height: %d", img.Picture.Width, img.Picture.Height)
 	end
 end
 jForm.btConvert.onClick = function() 
