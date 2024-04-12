@@ -20,8 +20,8 @@ frmMain._ = {
 	compImages = VCL.ImageList(frmMain)
 	toolImages = VCL.ImageList(frmMain)
 	compImages._ = {
-		Height=32,
-		Width=32,	
+		Height=24,
+		Width=24,
 	}
 	toolImages._ = {
 		Height=16,
