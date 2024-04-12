@@ -370,15 +370,16 @@ local function getPropFromRow()
 	local propValue, lastComponent, propPath = getProperty(Sender.TIObject,table.concat(pp,'.'))
 	-- check if we are editing property indirectly, e.g. for AnchorSide.Control
 	local elem=getCurElem()
+	local vclo
 	if lastComponent and (lastComponent.Handle ~= Sender.TIObject.Handle) then
-		local vclo
-		elem, vclo = findElemByPath(getNamePath(lastComponent))
+		elem, vclo = findElemByPath(getNamePathTable(lastComponent))
 		pp = propPath
 	end
 	local propName = table.remove(pp)
 	-- fix path for collection item properties
 	local collectionField = Sender.TIObject:GetNamePath():match('.+%.([_%w]+)%[[^[%]]+%]$')
 	if collectionField then
+		elem, vclo = findElemByPath(getNamePathTable(Sender.TIObject.Collection:Owner()))
 		table.insert(pp,1,collectionField)
 		table.insert(pp,2,Sender.TIObject.ID+1)
 	end
