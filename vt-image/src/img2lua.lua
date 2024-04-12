@@ -87,7 +87,7 @@ jForm.btConvert.onClick = function()
 		if f==nil then return false end
 		f:write("local images={\n")					
 		for _,img in pairs(cImages) do
-			f:write(string.format('\t{filename="%s", hexdata=[[%s]] },\n', img.filename, img.hexdata))		
+			f:write(string.format('\t{filename=%q, hexdata=[[%s]] },\n', img.filename, img.hexdata))
 		end
 		f:write("}\nreturn images\n")
 		f:flush()
