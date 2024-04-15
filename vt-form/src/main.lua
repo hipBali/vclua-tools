@@ -73,7 +73,7 @@ local function setupImages()
 		-- skip first 4 bytes
 		str:LoadFromHex(b, 5)
 		img.picture:LoadFromStream(str)
-		return t:Add(img.picture.bitmap,nil)
+		return t:Add(img.picture.Bitmap,nil)
 	end
 	
 	-- adding form (root) element image	
