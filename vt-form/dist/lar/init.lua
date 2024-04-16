@@ -1,7 +1,7 @@
 -- **************************************************
 -- LAR.LUA
 -- require function with archive reading capabilities
--- (c) 2009-2023 hipbali
+-- (c) 2009-2024 hipbali
 -- **************************************************
 --
 -- extends original require function with search in an archive content 

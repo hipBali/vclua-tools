@@ -1,7 +1,7 @@
 -- **************************************************
 -- LAR.LUA
 -- require function with archive reading capabilities
--- (c) 2009-2023 hipbali
+-- (c) 2009-2024 hipbali
 -- **************************************************
 --
 -- Lua Version > 5.3

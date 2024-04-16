@@ -1,10 +1,12 @@
 -- ***************************************
 -- VCLua Form tool
--- Copyright (C) 2013-2023 Hi-Project Ltd.
+-- Copyright (C) 2013-2024 Hi-Project Ltd.
 --
 -- builder form components
 -- ***************************************
 VCL = require "vcl.core"
+
+defaultCaption='VCLua form tool v'.._VCLFB_VERSION
 
 frmMain = VCL.Form()
 frmMain._ = {
@@ -12,14 +14,14 @@ frmMain._ = {
 	Left=0,
 	Top=30,
 	Width=600,
-	Caption='VCLua form tool v'.._VCLFB_VERSION,
+	Caption=defaultCaption,
 	Height=600,
 }
 	compImages = VCL.ImageList(frmMain)
 	toolImages = VCL.ImageList(frmMain)
 	compImages._ = {
-		Height=32,
-		Width=32,	
+		Height=24,
+		Width=24,
 	}
 	toolImages._ = {
 		Height=16,
@@ -132,9 +134,9 @@ frmMain._ = {
 		tsProperties._ = {
 			Caption='Properties',
 		}
-			compPropGrid = VCL.PropertyGrid(tsProperties)
+			compPropGrid = VCL.TIPropertyGrid(tsProperties)
 			compPropGrid._ = {
 				Align='alClient',
 				-- Filter='[tkInteger,tkChar,tkEnumeration,tkFloat,tkSet,tkMethod,tkSString,tkLString,tkAString,tkWString,tkVariant,tkArray,tkRecord,tkInterface,tkClass,tkObject,tkWChar,tkBool,tkInt64,tkQWord,tkDynArray,tkInterfaceRaw,tkProcVar,tkUString,tkUChar,tkHelper,tkFile,tkClassRef,tkPointer]'
-				Filter='[tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkSString, tkLString, tkAString, tkWString, tkVariant, tkClass, tkWChar, tkBool, tkInt64, tkProcVar, tkUString, tkUChar, tkFile]',
+				Filter='[tkInteger, tkChar, tkEnumeration, tkFloat, tkSet, tkSString, tkLString, tkAString, tkWString, tkClass, tkWChar, tkBool, tkInt64, tkQWord, tkUString, tkUChar]',
 			}

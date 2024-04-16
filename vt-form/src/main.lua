@@ -1,6 +1,6 @@
 -- ***************************************
 -- VCLua Form tool
--- Copyright (C) 2013-2023 Hi-Project Ltd.
+-- Copyright (C) 2013-2024 Hi-Project Ltd.
 -- ***************************************
 package.path=package.path..';lua/?.lua;'
 
@@ -14,6 +14,7 @@ if VCL._VERSION<_VCLUA_MINVERSION then
 	return
 end
 
+vclapp = VCL.TheApplication()
 require "common"
 toolImg = require "images"		-- application icon gfx imported from Lazarus project
 cmpImg = require "compimages"	-- vclua component gfx imported from Lazarus project
@@ -22,7 +23,18 @@ require "components"
 require "project"
 require "designer"
 
-VCL.Application():Initialize()
+vclapp:Initialize()
+-- it's important to set this callback on the singleton, not on result of VCL.Application()
+vclapp.OnException = function(Sender,E)
+	-- I don't know why, but only this order of encoding settings worked to show correct strings both in messagebox and in console with chcp 1251
+	-- recreate: press Ctrl+C on a Panel in the tree and then press and hold Ctrl+V to insert it in itself deeper and deeper
+	local s = E:ToString()
+	print(s)
+	VCL.setCPWin(true)
+	VCL.ShowMessage(s)
+	VCL.setCPWin(false)
+	print(debug.traceback())
+end
 
 -- vcl.ActionList loader
 function VCL.loadAction(self, t)
@@ -56,13 +68,12 @@ end
 
 local function setupImages()
 	local img = VCL.Image()	
-	local str = VCL.Stream()
+	local str = VCL.MemoryStream()
 	local add = function(t,b)
-		-- skip first 8 bytes
-		local memStr,size = str.LoadFromHex(b:sub(9))
-		img.picture:LoadFromStream(memStr) 	
-		memStr:Free()
-		return t:Add(img.picture.bitmap,nil)
+		-- skip first 4 bytes
+		str:LoadFromHex(b, 5)
+		img.picture:LoadFromStream(str)
+		return t:Add(img.picture.Bitmap,nil)
 	end
 	
 	-- adding form (root) element image	
@@ -96,6 +107,7 @@ local function setupMenus()
 		{name="fileSaveAs", caption="Save form as ...", imageIndex=3, onexecute=prjSaveAs },		
 		{name="fileQuit", caption="Exit", shortcut="Ctrl+Q", imageIndex=5, onexecute=prjExit},			
 
+		{name="frmRefresh", caption="Form refresh", shortcut="Ctrl+R",  onexecute=prjRefresh},
 		{name="frmPreview", caption="Form preview", shortcut="Ctrl+P",  onexecute=prjPreview},
 				
 		{name="aAbout", caption="About", shortcut="", imageIndex=7, onexecute=function() 
@@ -105,7 +117,6 @@ local function setupMenus()
 	})
 	local mainMenu = VCL.MainMenu(frmMain, "mmmainmenu")
 	mainMenu.Images = toolImages
-	mainMenu.showhint=true
 	VCL.loadMenu(mainMenu, {
 		{caption="&File",   
 			submenu={
@@ -116,6 +127,7 @@ local function setupMenus()
 				{caption="-",},					
 				{action=mainActions["fileSaveAs"]},	
 				{caption="-",},	
+				{action=mainActions["frmRefresh"]},	
 				{action=mainActions["frmPreview"]},	
 				{caption="-",},
 				{action=mainActions["fileQuit"]}  
@@ -148,6 +160,10 @@ local function setupMenus()
 		{name="treeSep2", caption="-" },
 		{action=prjActions["treeDelete"]},
 	})
+	compPropGrid.PopupMenu = VCL.PopupMenu()
+	VCL.loadMenu(compPropGrid.PopupMenu, {
+		{action=VCL.Action(compPropGrid.PopupMenu,"gridDelete",{caption="Delete and reload", onexecute=DeletePropAndReload})},
+	})
 end
 
 local function fillView(flag)
@@ -166,7 +182,6 @@ end
 local function setupMainForm()
 	setupImages()
 	setupMenus()
-	tvForm.Items.KeepCollapse = false
 	pgTabs.ActivePage=tsCompTree
 	-- show components
 	fillView("C")
@@ -174,6 +189,6 @@ local function setupMainForm()
 end
 
 setupMainForm()
-frmMain.OnActivate = function() prjPreview() end
+frmMain.OnShow = function() prjPreview() end
 frmMain:ShowModal()
 

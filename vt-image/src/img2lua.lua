@@ -2,45 +2,29 @@
 -- Image to lua converter
 -- Copyright (C) 2013-2024 Hi-Project Ltd.
 -- ***************************************
-local VCL = require "vcl.core"
-local json = require "json"
+VCL = require "vcl.core"
+require "loader"
 
--- Loader
-function jsonFormLoad(fileName) 
-	local file, errorString = io.open( fileName, mode or "r"  )
-	assert(file,string.format("%s not found!", tostring(fileName)))
-	local contents = file:read( "*a" )
-	io.close( file )
-	local frm = json.decode(contents)
-	local comp = {}
-	for n,c in pairs(frm) do
-		if VCL[c.class]~=nil then
-			comp[c.name] = VCL[c.class](comp[c.parent],c.name,c.props)
-		end
-	end
-	return comp
-end
+local mainForm, _, jForm = jsonFormLoad("img2lua.json")
+local imgList = jForm.clFiles
 
 -- Converter
 local img2lua = function(fName)
 	local img = VCL.Image()
 	img.picture:LoadFromFile(fName)
-	local str = VCL.Stream()
+	local str = VCL.MemoryStream()
 	img.picture:SaveToStream(str)
 	local hexData = "" -- 36040000"
-	str.position = 0
-	while str.position < str.size do
+	str.Position = 0
+	while str.Position < str.Size do
 		hexData = hexData .. string.format('%02X', str:ReadByte())
 	end
+	--str:LoadFromHex(hexData) -- for testing
+	--jForm.imgView.Picture:LoadFromStream(str)
 	str:Free()
 	img:Free()
 	return hexData
 end
-
-
-local jForm = jsonFormLoad("img2lua.json")
-local mainForm = jForm["img2lua_form"]
-local imgList = jForm.clFiles
 
 -- Events
 mainForm.ondropfiles = function(sender,f)
@@ -48,11 +32,11 @@ mainForm.ondropfiles = function(sender,f)
 	if type(f)=="table" then
 		for k,v in pairs(f) do
 			local n = imgList.Items:Add(v)
-			imgList:SetChecked(n,true)
+			imgList:Checked(n,true)
 		end
 	elseif type(f)=="string" then
 		local n = imgList.Items:Add(v)
-		imgList:SetChecked(n,true)
+		imgList:Checked(n,true)
 	end
 end
 jForm.btAdd.onClick = function() 
@@ -61,26 +45,26 @@ jForm.btAdd.onClick = function()
 	local fileName 
 	if fod:Execute() then
 		n = imgList.Items:Add(fod.fileName)
-		imgList:SetChecked(n,true)
+		imgList:Checked(n,true)
 	end
 	fod:Free()
 end
 jForm.btClear.onClick = function() imgList.Items:Clear() end
 jForm.clFiles.OnClick = function(s)
-	local items = imgList.Items:ToTable()
+	local items = imgList.Items:ToStringArray2()
 	local img = jForm.imgView
 	if imgList.ItemIndex ~= -1 then
 		-- lua table index +1
 		img.Picture:LoadFromFile(items[imgList.ItemIndex+1])
-		jForm.lbInfo.Caption = string.format("Width: %d Height: %d", img.Width, img.Height)
+		jForm.lbInfo.Caption = string.format("Width: %d Height: %d", img.Picture.Width, img.Picture.Height)
 	end
 end
 jForm.btConvert.onClick = function() 
 	local cImages = {}
-	local items = imgList.Items:ToTable()
+	local items = imgList.Items:ToStringArray2()
 	-- Convert checked files
 	for n,item in pairs(items) do
-		if imgList:GetChecked(n-1) then
+		if imgList:Checked(n-1) then
 			table.insert (cImages, { filename = item, hexdata = img2lua(items[n]) })
 		end
 	end 
@@ -103,7 +87,7 @@ jForm.btConvert.onClick = function()
 		if f==nil then return false end
 		f:write("local images={\n")					
 		for _,img in pairs(cImages) do
-			f:write(string.format('\t{filename="%s", hexdata=[[%s]] },\n', img.filename, img.hexdata))		
+			f:write(string.format('\t{filename=%q, hexdata=[[%s]] },\n', img.filename, img.hexdata))
 		end
 		f:write("}\nreturn images\n")
 		f:flush()
@@ -113,5 +97,5 @@ jForm.btConvert.onClick = function()
 end
 
 -- Run
-VCL.Application():Initialize()
+VCL.TheApplication():Initialize()
 mainForm:ShowModal()

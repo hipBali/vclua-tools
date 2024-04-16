@@ -1,6 +1,6 @@
 -- ***************************************
 -- VCLua Form tool
--- Copyright (C) 2013-2023 Hi-Project Ltd.
+-- Copyright (C) 2013-2024 Hi-Project Ltd.
 --
 -- project manager
 -- ***************************************
@@ -23,12 +23,16 @@ function getProject()
 	return prjTable
 end
 
+local function setPrjName(name)
+  prjName = name
+  frmMain.Caption = name and defaultCaption..': '..name or defaultCaption
+end
+
 function setCurElem(elem)
 	elem = elem or prjTable.items[1]
 	-- save virtual element content into property, except on initialization
 	if curElem and curElem.vclObj and curElem.vclObj.virtual and prjInit==nil then
 		curElem.vclObj.code = seCode.Text
-		setProperty(curElem.vclObj, "code", seCode.Text)
 	end
 	if elem.vclObj.virtual then
 		tsProperties.TabVisible = false
@@ -45,8 +49,8 @@ function getCurElem()
 end
 
 local function _saveProject(fileName)
-	prjName = fileName
-	fileio.saveJson(fileName,toJson())
+	setPrjName(fileName)
+	fileio.saveJson(fileName,toJson(prjForm))
 end
 
 function prjSaveAs()
@@ -68,10 +72,15 @@ function prjSave()
 end
 
 local function _newProject()
-	prjName = nil	
+	setPrjName(nil)
 	curElem = nil
 	if prjTable then
-		for k,v in pairs(prjTable.items) do
+		if compPropGrid.collectionForm then
+			-- this is only needed to prevent crashes when this form was ever used
+			compPropGrid.collectionForm:Close()
+			compPropGrid.oldTIObject = nil
+		end
+		for _,v in ipairs(prjTable.items) do
 			if v.vclObj and v.vclObj.virtual==nil then
 				v.vclObj:Free()
 			end
@@ -80,26 +89,25 @@ local function _newProject()
 	prjTable = {items={}}
 	-- prjSrc:Clear()
 	tvForm.Items:Clear()
-	resetUniqueNames()
 	return true
 end
 
 function prjNew()
 	_newProject()
-	local t = addComponent(nil,"Form")	
-	t.vclObj.position = "poScreenCenter"
-	prjForm = prjTable.items[1]
+	prjForm = addComponent(nil,"Form")
+	prjForm.vclObj.Position = "poScreenCenter"
+	prjForm.props.Position = "poScreenCenter"
 	setCurElem(prjForm)
 end
 
-local function loadProject(fileName)
+local function loadProject(frm,name)
 	prjInit = true
 	tvForm.OnSelectionChanged=nil
-	local frm = fileio.loadJson(fileName)
 	_newProject()
-	fromJson(frm)
+	tableToTreeView(fromJson(frm,prjTable))
+	setPrjName(name)
 	prjForm = prjTable.items[1]
-	setCurElem(prjForm,true) -- true means initializaton only, no property change
+	setCurElem(prjForm)
 	tvForm:FullExpand()	
 	tvForm.OnSelectionChanged=function(Sender)
 		local elem = Sender.Selected
@@ -108,38 +116,25 @@ local function loadProject(fileName)
 		end
 	end
 	prjInit = nil
-end
-
-function prjLoad()
-	local fileName = openDialog(frmMain,"Open form","forms/",
-					 "VCLua forms|*.json","[ofFileMustExist]")
-	if type(fileName)=="string" then
-		loadProject(fileName)
-		prjName = fileName
-	end
 end
 
 function prjPreview()
 	prjForm.vclObj:ShowOnTop()
 end
 
+function prjLoad()
+	local fileName = openDialog(frmMain,"Open form","forms/",
+					 "VCLua forms|*.json","[ofFileMustExist]")
+	if type(fileName)=="string" then
+		loadProject(fileio.loadJson(fileName),fileName)
+		setPrjName(fileName)
+		prjPreview()
+	end
+end
+
 function prjRefresh()
 	local isPrv = prjForm.vclObj.visible
-	local frm = toJson()
-	prjInit = true
-	tvForm.OnSelectionChanged=nil
-	_newProject()
-	fromJson(frm)
-	prjForm = prjTable.items[1]
-	setCurElem(prjForm,true)
-	tvForm:FullExpand()	
-	tvForm.OnSelectionChanged=function(Sender)
-		local elem = Sender.Selected
-		if elem then	
-			setCurElem(findElem(elem))
-		end
-	end
-	prjInit = nil
+	loadProject(toJson(prjForm), prjName)
 	if isPrv then
 		prjPreview()
 	end
