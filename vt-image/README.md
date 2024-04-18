@@ -18,14 +18,13 @@ _Features:_
 _Source code:_
  - [src](src/)
    
-#### loading image content from hexdata    
+#### loading image content from hexdata
 ```lua
-    function loadHexImage( img, hexdata) 
-    	local str = VCL.Stream()
-    	local memStr,size = str.LoadFromHex(hexdata)
-    	img.picture:LoadFromStream(memStr) 	
-    	memStr:Free()
-    	str:Free()
+    function loadHexImage( img, hexdata)
+        local str = VCL.MemoryStream()
+        str:LoadFromHex(hexdata)
+        img.picture:LoadFromStream(memStr)
+        str:Free()
     end
 ```
 

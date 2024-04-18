@@ -26,32 +26,21 @@ _Luajit distro:_
 _Lua5.4 distro:_
  - [lua5.4 with lar distro](dist54/)
    
-#### loading form from json file    
+#### loading form from json file
+
+Ensure `copy.lua`, `json.lua`, `loader.lua` and the library are in appropriate places. Then:
+
 ```lua
-    local VCL = require "vcl.core"
-    local json = require "json"
-    VCL.Application():Initialize()
+    VCL = require "vcl.core"
+    VCL.TheApplication():Initialize()
+    require "loader"
     
-    function jsonFormLoad(fileName) 
-    	local file, errorString = io.open( fileName, mode or "r"  )
-    	assert(file,string.format("%s not found!", tostring(fileName)))
-    	local contents = file:read( "*a" )
-    	io.close( file )
-    	local frm = json.decode(contents)
-    	local comp = {}
-    	for n,c in pairs(frm) do
-    		if VCL[c.class]~=nil then
-    			comp[c.name] = VCL[c.class](comp[c.parent],c.name,c.props)
-    		end
-    	end
-    	return comp
-    end
-    
-    local mainFormName = "MyForm"
-    local jForm = jsonFormLoad("myform.json")
-    
-    jForm[mainFormName]:ShowModal()
+    local mainForm, componentsByPath, jForm = jsonFormLoad("img2lua.json")
+    -- or, if the components have unique names
+    -- local mainForm, componentsByPath = jsonFormLoad("img2lua.json", _G)
+    mainForm:ShowModal()
 ```
+
 ### convert json form to lua script
 Converts vt-form tool's output to lua script.
 [json2lua.lua](utils/json2lua.lua)

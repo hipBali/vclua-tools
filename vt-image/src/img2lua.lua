@@ -5,6 +5,7 @@
 VCL = require "vcl.core"
 require "loader"
 
+VCL.SetErrorReporter(VCL.ShowMessage)
 local mainForm, _, jForm = jsonFormLoad("img2lua.json")
 local imgList = jForm.clFiles
 

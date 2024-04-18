@@ -132,10 +132,7 @@ local function moveChild(child,parent)
 	local ct,cp,cn = findElem(child) -- child table, orig parent table, index
 	local pt = findElem(parent)	-- new parent table
 	local res, err = pcall(function() ct.vclObj.Parent = pt.vclObj end)
-	if not res then
-		print(err)
-		return
-	end
+	if not res then return end
 	table.remove(cp.items, cn)
 	local name = getUniqueName(pt.items, ct.class, ct.name)
 	table.insert(pt.items, ct)

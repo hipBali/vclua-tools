@@ -24,17 +24,11 @@ require "project"
 require "designer"
 
 vclapp:Initialize()
+local function printError(s) s = s..'\n'..debug.traceback(nil,2); VCL.ShowMessage(s) end
 -- it's important to set this callback on the singleton, not on result of VCL.Application()
-vclapp.OnException = function(Sender,E)
-	-- I don't know why, but only this order of encoding settings worked to show correct strings both in messagebox and in console with chcp 1251
-	-- recreate: press Ctrl+C on a Panel in the tree and then press and hold Ctrl+V to insert it in itself deeper and deeper
-	local s = E:ToString()
-	print(s)
-	VCL.setCPWin(true)
-	VCL.ShowMessage(s)
-	VCL.setCPWin(false)
-	print(debug.traceback())
-end
+vclapp.OnException = function(Sender,E) printError('unhandled exception '..E:ToString()) end
+vclapp.OnCircularException = function(Sender,E) print('halting') end
+VCL.SetErrorReporter(printError)
 
 -- vcl.ActionList loader
 function VCL.loadAction(self, t)
