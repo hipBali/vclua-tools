@@ -6,7 +6,7 @@ This small application allows you to convert images (bmp,jpg,png) to hexstrings.
 <img src="screenshots/vt-image_1.jpg" alt="vt-form" width="50%" height="50%">
 
 _Requirements:_
- - [vclua](https://github.com/hipbali/vclua) (v.0.9.2 or higher)
+ - [vclua](https://github.com/hipbali/vclua) (v.0.9.2.338 or higher)
  - [lua json library](https://github.com/rxi/json.lua)
 
 _Features:_

@@ -4,18 +4,30 @@
 -- ***************************************
 package.path=package.path..';lua/?.lua;'
 
-_VCLFB_COPY = "Copyright (C) 2013-2023 Hi-Project Ltd."
+require "common"
 _VCLFB_VERSION = "0.9.2"
 _VCLUA_MINVERSION = "0.9.2"
 
+local function versionOk(v)
+  v = v:split()
+  local vOk = _VCLUA_MINVERSION:split()
+  local last = math.min(#v,#vOk)
+  for i = 1,last do
+    if tonumber(v[i]) < tonumber(vOk[i]) then return false
+    elseif tonumber(v[i]) > tonumber(vOk[i]) then return true
+    end
+  end
+  return true
+end
+
 VCL = require "vcl.core"
-if VCL._VERSION<_VCLUA_MINVERSION then
+vclapp = VCL.TheApplication()
+vclapp:Initialize()
+if not versionOk(VCL._VERSION) then
 	VCL.ShowMessage("VCLua minimum version required is ".._VCLUA_MINVERSION.."!\nYour version is "..tostring(VCL._VERSION))
 	return
 end
 
-vclapp = VCL.TheApplication()
-require "common"
 toolImg = require "images"		-- application icon gfx imported from Lazarus project
 cmpImg = require "compimages"	-- vclua component gfx imported from Lazarus project
 require "form"
@@ -23,7 +35,6 @@ require "components"
 require "project"
 require "designer"
 
-vclapp:Initialize()
 local function printError(s) s = s..'\n'..debug.traceback(nil,2); VCL.ShowMessage(s) end
 -- it's important to set this callback on the singleton, not on result of VCL.Application()
 vclapp.OnException = function(Sender,E) printError('unhandled exception '..E:ToString()) end
