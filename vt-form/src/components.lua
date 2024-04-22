@@ -74,8 +74,8 @@ local function findElemByPath(path)
 end
 
 local function setName(elem,name,fixObj)
-	elem.name = name
 	elem.vclObj.Name = name
+	elem.name = name
 	if fixObj then elem.obj.Text = name end
 	if elem.vclObj.Caption == name then elem.props.Caption = nil end -- prevent errors later when name is changed
 end
@@ -477,11 +477,9 @@ tvForm.OnEdited=function(Sender,Node,S)
 	local elem = findElem(Node)	
 	if string.len(S)>0 then
 		S = S:gsub('%W','')	
-		setName(elem,S)
-	else 
-		S = elem.vclObj.name
-	end		
-	return S
+		if pcall(setName,elem,S) then return S end
+	end
+	return elem.vclObj.name
 end
 
 tvForm.OnMouseDown=function(Sender,Button,ShiftState, X,Y)
