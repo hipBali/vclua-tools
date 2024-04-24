@@ -219,8 +219,9 @@ local function applyCollectionsOrder(srcItem, dstProps)
 	-- apply ID->order for collections
 	if next(srcItem.collections) then
 		for name,order in pairs(srcItem.collections) do
+			srcItem.props[name] = srcItem.props[name] or {}
 			local t,items = {},#order
-			for i = 1,items do t[i] = srcItem.props[name][order[i]] end
+			for i = 1,items do t[i] = srcItem.props[name][order[i]] or {} end
 			dstProps[name] = t
 		end
 	end
@@ -243,17 +244,14 @@ function toJson(root)
 	local rpPos = #rootPath+1
 	local rppPos = #rootParentPath+1
 	local function vcloToRelativePath(vclo)
-		if type(vclo) == "table" then
-			-- erase empty tables which arise when incorrect values are set or when previous changes are undone
-			if next(vclo) == nil then return true, nil
-			elseif vclo.Handle then
-				local path = getNamePath(vclo)
-				if path:find(rootPath,1,true) == 1 then return true, '<root>'..path:sub(rpPos)..'.vt-form'
-				elseif path:find(rootParentPath,1,true) == 1 then return true, '<rootparent>'..path:sub(rppPos)..'.vt-form'
-				else return true, path..'.vt-form'
-				end
+		if isVclo(vclo) then
+			-- don't erase empty tables which arise when incorrect values are set or when previous changes are undone
+			-- since it interferes with collections
+			local path = getNamePath(vclo)
+			if path:find(rootPath,1,true) == 1 then return true, '<root>'..path:sub(rpPos)..'.vt-form'
+			elseif path:find(rootParentPath,1,true) == 1 then return true, '<rootparent>'..path:sub(rppPos)..'.vt-form'
+			else return true, path..'.vt-form'
 			end
-		else return false
 		end
 	end
 	local function getObject(o)

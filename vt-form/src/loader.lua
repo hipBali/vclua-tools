@@ -31,6 +31,10 @@ function getNamePath(vclo)
   return table.concat(getNamePathTable(vclo),'.')
 end
 
+function isVclo(vclo)
+  return type(vclo) == 'table' and type(vclo.Handle) == 'userdata'
+end
+
 local function split(s)
    local fields = {}
    local pattern = string.format("([^.]+)", sep)
