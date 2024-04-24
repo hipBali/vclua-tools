@@ -15,6 +15,21 @@ function toNewFormat(src)
   return src
 end
 
+function fileToJson(fileName)
+  local file, errorString = io.open(fileName)
+  assert(file,"Can't open "..fileName..": "..(errorString or ""))
+  local contents = file:read("*a")
+  io.close(file)
+  return toNewFormat(json.decode(contents))
+end
+
+function jsonToFile(frm, fileName)
+  local file, errorString = io.open(fileName, "w")
+  assert(file,"Can't save to "..fileName..": "..(errorString or ""))
+  file:write(json.encode(frm))
+  io.close(file)
+end
+
 function getNamePathTable(vclo)
   local t = {n=0}
   local function impl(vclo)
@@ -50,11 +65,7 @@ end
 
 -- try using _G for byName if your form has unique component names suitable for being Lua identificators
 function jsonFormLoad(fileName,byName)
-  local file, errorString = io.open(fileName)
-  assert(file,"Can't open "..fileName..": "..(errorString or ""))
-  local contents = file:read("*a")
-  io.close(file)
-  local frm = toNewFormat(json.decode(contents))
+  local frm = fileToJson(fileName)
   local byPath = {}
   byName = byName or {}
   local function addTree(c,p,path)
@@ -86,5 +97,59 @@ function jsonFormLoad(fileName,byName)
   addTree(frm)
   setProps(frm)
   return byPath[frm.name], byPath, byName
+end
+
+function jsonUpdateWithForm(frm,topForm)
+  local function updTree(vclo,tree)
+    if not isVclo(vclo) then error('No component '..(tree and tree.name or 'nil')) end
+    if not tree then error('Component '..vclo.Name..' not in json') end
+    if vclo.Caption and vclo.Name ~= vclo.Caption then
+      tree.props = tree.props or {}
+      tree.props.Caption = vclo.Caption
+    end
+    local updateProp
+    local function updateProps(vclo,props)
+      for p,pv in pairs(props or {}) do
+        updateProp(vclo,props,p,pv)
+      end
+    end
+    updateProp = function(vclo,props,p,pv)
+      if type(pv) ~= "table" then
+        local newpv = vclo[p]
+        if isVclo(newpv) then newpv = getNamePath(newpv)..'.vt-form' end -- objects are stored as paths in json
+        if newpv ~= pv then
+          props[p] = newpv
+        end
+      else
+        local subobject = vclo[p]
+        if subobject then
+          if pv[1] then
+            -- subobject should be TCollection
+            local l, count = #pv, subobject.Count
+            for i = l+1, count do pv[i] = deepCopy(pv[l]) end -- assume new collection item wants the same props saved as the last item
+            for i = count+1, l do pv[i] = nil end
+            -- now that #pv became subobject.Count
+            for i = 1,count do updateProps(subobject:Items(i-1),pv[i]) end
+          else
+            updateProps(subobject,pv)
+          end
+        else
+          props[p] = nil
+        end
+      end
+    end
+    updateProps(vclo, tree.props)
+    for _,item in ipairs(tree.items) do
+      updTree(vclo:FindComponent(item.name),item)
+    end
+  end
+  updTree(topForm,frm)
+  frm.props = frm.props or {}
+  frm.props.Top = topForm.Top
+  frm.props.Left = topForm.Left
+  frm.props.Height = topForm.Height
+  frm.props.Width = topForm.Width
+  frm.props.Position = nil
+  return frm
 end
 

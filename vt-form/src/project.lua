@@ -75,6 +75,7 @@ local function _newProject()
 	setPrjName(nil)
 	curElem = nil
 	if prjTable then
+		compPropGrid.TIObject=nil
 		if compPropGrid.collectionForm then
 			-- this is only needed to prevent crashes when this form was ever used
 			compPropGrid.collectionForm:Close()
@@ -135,6 +136,15 @@ end
 function prjRefresh()
 	local isPrv = prjForm.vclObj.visible
 	loadProject(toJson(prjForm), prjName)
+	if isPrv then
+		prjPreview()
+	end
+end
+
+function prjUpdate()
+	local isPrv = prjForm.vclObj.visible
+	local frm = jsonUpdateWithForm(toJson(prjForm), prjForm.vclObj)
+	loadProject(frm, prjName)
 	if isPrv then
 		prjPreview()
 	end

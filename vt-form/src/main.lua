@@ -114,6 +114,7 @@ local function setupMenus()
 
 		{name="frmRefresh", caption="Form refresh", shortcut="Ctrl+R",  onexecute=prjRefresh},
 		{name="frmPreview", caption="Form preview", shortcut="Ctrl+P",  onexecute=prjPreview},
+		{name="prpUpdate", caption="Update props from preview", shortcut="Ctrl+U", onexecute=prjUpdate},
 				
 		{name="aAbout", caption="About", shortcut="", imageIndex=7, onexecute=function() 
 			VCL.ShowMessage('VCLua form tool v'.._VCLFB_VERSION)
@@ -134,6 +135,7 @@ local function setupMenus()
 				{caption="-",},	
 				{action=mainActions["frmRefresh"]},	
 				{action=mainActions["frmPreview"]},	
+				{action=mainActions["prpUpdate"]},
 				{caption="-",},
 				{action=mainActions["fileQuit"]}  
 			}
