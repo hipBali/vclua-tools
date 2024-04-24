@@ -418,24 +418,40 @@ local function CollectionEditorClose(Sender)
   compPropGrid.TIObject = compPropGrid.oldTIObject
   return 'caHide'
 end
+local function StoreOrder(fm)
+  local coll = fm.Collection
+  local path = getNamePath(fm.OwnerPersistent)
+  local elem = findElemByPath(path)
+  local coll_desc = {}
+  for i = 1,coll.Count do
+     -- IDs are 0-based, so +1
+    coll_desc[i] = coll:Items(i-1).ID+1
+  end
+  elem.collections[fm.PropertyName] = coll_desc
+  return elem, coll
+end
 local function GetOnCollectionModified(cb,fm,s)
   return function(Sender)
     if s == 'del' then compPropGrid.TIObject = nil end
     cb(fm,Sender)
     if s == 'del' then fm.CollectionListBox:Click() end
-    local coll = fm.Collection
-    local path = getNamePath(fm.OwnerPersistent)
-    local elem = findElemByPath(path)
-    local coll_desc = elem.collections[fm.PropertyName] or {}
-    for i = 1,coll.Count do
-       -- IDs are 0-based, so +1
-      coll_desc[i] = coll:Items(i-1).ID+1
-    end
-    elem.collections[fm.PropertyName] = coll_desc
+    StoreOrder(fm)
   end
 end
+local function CopyCollItem(fm,Sender)
+  local index = fm.CollectionListBox.ItemIndex
+  if index < 0 then return end
+  fm.actAddExecute(fm,Sender)
+  local elem, coll = StoreOrder(fm)
+  local colProps = elem.props[fm.PropertyName]
+  fm.CollectionListBox:Click()
+  if not colProps then return end
+  local item = coll:Items(coll.Count-1)
+  local id = item.ID+1
+  colProps[id] = table.copy(colProps[coll:Items(index).ID+1])
+  if next(colProps[id]) then item._ = colProps[id] end
+end
 local collectionFormInited = false
-
 compPropGrid.OnEditorFilter=function(Sender,editor,show)
   --print(editor.ClassName, editor:GetPropertyPath())
   if editor:is('TCollectionPropertyEditor') then
@@ -450,6 +466,9 @@ compPropGrid.OnEditorFilter=function(Sender,editor,show)
       fm.actDel.OnExecute=GetOnCollectionModified(fm.actDelExecute,fm,'del')
       fm.actMoveDown.OnExecute=GetOnCollectionModified(fm.actMoveUpDownExecute,fm,'down')
       fm.actMoveUp.OnExecute=GetOnCollectionModified(fm.actMoveUpDownExecute,fm,'up')
+      local action = VCL.Action()
+      action._ = {Caption = 'Add copy', OnExecute = GetOnCollectionModified(CopyCollItem,fm,'addcopy')}
+      local tb = VCL.ToolButton(fm.ToolBar1, 'Copy', {Action = action})
       fm:Hide()
       collectionFormInited = true
     end
