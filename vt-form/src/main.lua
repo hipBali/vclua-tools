@@ -37,7 +37,7 @@ require "designer"
 
 local function printError(s) s = s..'\n'..debug.traceback(nil,2); VCL.ShowMessage(s) end
 -- it's important to set this callback on the singleton, not on result of VCL.Application()
-vclapp.OnException = function(Sender,E) printError('unhandled exception '..E:ToString()) end
+vclapp.OnException = function(Sender,E) printError('unhandled exception '..VCL.UTF8(E:ToString())) end
 vclapp.OnCircularException = function(Sender,E) print('halting') end
 VCL.SetErrorReporter(printError)
 

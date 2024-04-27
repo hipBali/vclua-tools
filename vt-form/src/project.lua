@@ -50,7 +50,7 @@ end
 
 local function _saveProject(fileName)
 	setPrjName(fileName)
-	fileio.saveJson(fileName,toJson(prjForm))
+	fileio.saveJson(VCL.WinCP(fileName),toJson(prjForm))
 end
 
 function prjSaveAs()
@@ -127,7 +127,7 @@ function prjLoad()
 	local fileName = openDialog(frmMain,"Open form","forms/",
 					 "VCLua forms|*.json","[ofFileMustExist]")
 	if type(fileName)=="string" then
-		loadProject(fileio.loadJson(fileName),fileName)
+		loadProject(fileio.loadJson(VCL.WinCP(fileName)),fileName)
 		setPrjName(fileName)
 		prjPreview()
 	end
