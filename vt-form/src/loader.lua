@@ -23,10 +23,10 @@ function fileToJson(fileName)
   return toNewFormat(json.decode(contents))
 end
 
-function jsonToFile(frm, fileName)
+function jsonToFile(frm, fileName, encoder)
   local file, errorString = io.open(fileName, "w")
   assert(file,"Can't save to "..fileName..": "..(errorString or ""))
-  file:write(json.encode(frm))
+  file:write((encoder or json.encode)(frm))
   io.close(file)
 end
 
