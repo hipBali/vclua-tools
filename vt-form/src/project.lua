@@ -73,7 +73,6 @@ end
 
 local function _newProject()
 	setPrjName(nil)
-	curElem = nil
 	if prjTable then
 		compPropGrid.TIObject=nil
 		if compPropGrid.collectionForm then
@@ -87,6 +86,7 @@ local function _newProject()
 			end
 		end
 	end
+	curElem = nil -- should be done after 'compPropGrid.TIObject=nil' since it triggers unsaved edit
 	prjTable = {items={}}
 	-- prjSrc:Clear()
 	tvForm.Items:Clear()
