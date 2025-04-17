@@ -95,7 +95,7 @@ function jsonFormLoad(fileName,byName)
   end
   addTree(frm)
   setProps(frm)
-  return byPath[frm.name], byPath, byName
+  return byPath[frm.name], byPath, byName, frm
 end
 
 function jsonUpdateWithForm(frm,topForm)
