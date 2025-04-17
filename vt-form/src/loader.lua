@@ -98,14 +98,11 @@ function jsonFormLoad(fileName,byName)
   return byPath[frm.name], byPath, byName, frm
 end
 
-function jsonUpdateWithForm(frm,topForm)
+function jsonUpdateWithForm(frm,topForm,fixCaptions)
   local function updTree(vclo,tree)
     if not isVclo(vclo) then error('No component '..(tree and tree.name or 'nil')) end
     if not tree then error('Component '..vclo.Name..' not in json') end
-    if vclo.Caption and vclo.Name ~= vclo.Caption then
-      tree.props = tree.props or {}
-      tree.props.Caption = vclo.Caption
-    end
+    tree.props = tree.props or {}
     local updateProp
     local function updateProps(vclo,props)
       for p,pv in pairs(props or {}) do
@@ -138,6 +135,9 @@ function jsonUpdateWithForm(frm,topForm)
       end
     end
     updateProps(vclo, tree.props)
+    if vclo.Caption and vclo.Name ~= vclo.Caption then
+      tree.props.Caption = fixCaptions and vclo.Caption:gsub('\r','') or vclo.Caption
+    end
     for _,item in ipairs(tree.items) do
       updTree(vclo:FindComponent(item.name),item)
     end
