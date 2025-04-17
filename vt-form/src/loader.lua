@@ -52,8 +52,7 @@ end
 
 local function split(s)
    local fields = {}
-   local pattern = string.format("([^.]+)", sep)
-   s:gsub(pattern, function(c) fields[#fields+1] = c end)
+   s:gsub("([^.]+)", function(c) fields[#fields+1] = c end)
    return fields
 end
 
